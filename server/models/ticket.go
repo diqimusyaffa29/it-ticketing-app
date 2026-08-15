@@ -10,6 +10,6 @@ type Ticket struct {
 	ReporterID uint
 	Reporter   User `gorm:"foreignKey:ReporterID"`
 
-	AssigneeID uint
-	Assignee   User `gorm:"foreignKey:AssigneeID"`
+	AssigneeID *uint `gorm:"default:null"`
+	Assignee   *User `gorm:"foreignKey:AssigneeID"`
 }
