@@ -73,3 +73,23 @@ func GetTickets(c *fiber.Ctx) error {
 		"data":    tickets,
 	})
 }
+
+func GetTicketById(c *fiber.Ctx) error {
+	// untuk mengambil ID dari param ketika hit API
+	id := c.Params("id")
+
+	var ticket models.Ticket
+
+	// mengmabil data ticket dengan preload dan berdasar ID
+	result := config.DB.Preload("Reporter").Preload("Assignee").Find(&ticket, id)
+	if result.Error != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Failed to get ticket data by ID" + result.Error.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Successfully get ticket By ID",
+		"data":    ticket,
+	})
+}
