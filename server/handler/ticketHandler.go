@@ -55,3 +55,21 @@ func CreateTicket(c *fiber.Ctx) error {
 		"data":    ticket,
 	})
 }
+
+func GetTickets(c *fiber.Ctx) error {
+	var tickets []models.Ticket
+
+	// mengambil semua data tickets dengan preload reporter dan assignee
+	result := config.DB.Preload("Reporter").Preload("Assignee").Find(&tickets)
+	if result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get ticket data:" + result.Error.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Successfully get all tickets data",
+		"total":   len(tickets),
+		"data":    tickets,
+	})
+}
