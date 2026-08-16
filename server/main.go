@@ -18,6 +18,7 @@ func main() {
 	api := app.Group("/api")
 	api.Post("/createTicket", handler.CreateTicket)
 	api.Get("/getTickets", handler.GetTickets)
+	api.Get("/getTicketById/:id", handler.GetTicketById)
 
 	// Listen di port 8080
 	app.Listen(":8080")
