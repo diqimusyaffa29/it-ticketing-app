@@ -17,6 +17,7 @@ func main() {
 	// Buat routing group
 	api := app.Group("/api")
 	api.Post("/createTicket", handler.CreateTicket)
+	api.Get("/getTickets", handler.GetTickets)
 
 	// Listen di port 8080
 	app.Listen(":8080")
