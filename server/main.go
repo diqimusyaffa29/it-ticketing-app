@@ -20,6 +20,7 @@ func main() {
 	api.Get("/getTickets", handler.GetTickets)
 	api.Get("/getTicketById/:id", handler.GetTicketById)
 	api.Put("/updateTicket/:id", handler.UpdateTicket)
+	api.Delete("/deleteTicket/:id", handler.DeleteTicket)
 
 	// Listen di port 8080
 	app.Listen(":8080")
