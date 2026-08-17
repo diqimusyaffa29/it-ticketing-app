@@ -1,23 +1,24 @@
-package config
+package main // <-- Pastikan ini 'main', BUKAN 'migrate' atau yang lainnya!
 
 import (
 	"fmt"
 	"log"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"ticketing-it-app/server/config"
+	"ticketing-it-app/server/models"
 )
 
-var DB *gorm.DB
+func main() { // <-- Pastikan ada func main()
+	// 1. Konek ke DB
+	config.ConnectDatabase()
 
-func ConnectDatabase() {
-	dsn := "host=localhost user=postgres password=postgres dbname=ticketing_db port=5432 sslmode=disable TimeZone=Asia/Makassar"
+	fmt.Println("Menjalankan migrasi database...")
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	// 2. Jalankan AutoMigrate
+	err := config.DB.AutoMigrate(&models.User{}, &models.Ticket{})
 	if err != nil {
-		log.Fatalf("Gagal terhubung ke database: %v", err)
+		log.Fatalf("Gagal melakukan migrasi: %v", err)
 	}
 
-	fmt.Println("Berhasil terhubung ke PostgreSQL!")
-	DB = db
+	fmt.Println("Migrasi berhasil dilakukan!")
 }
