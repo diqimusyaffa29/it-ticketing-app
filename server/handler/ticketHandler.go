@@ -146,3 +146,27 @@ func UpdateTicket(c *fiber.Ctx) error {
 		"data":    ticket,
 	})
 }
+
+func DeleteTicket(c *fiber.Ctx) error {
+	id := c.Params("id ")
+
+	var ticket models.Ticket
+	// cek apakah id ada
+	if err := config.DB.First(&ticket, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Ticket not Found",
+		})
+	}
+
+	// Eksekusi Delete
+	if err := config.DB.Delete(&ticket).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Failed to delete Ticket",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Successfully deleted ticket",
+	})
+
+}
