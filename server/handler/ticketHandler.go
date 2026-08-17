@@ -15,6 +15,12 @@ type CreateTicketInput struct {
 	AssigneeID  *uint  `json:"assignee_id"`
 }
 
+type UpdateTicketInput struct {
+	Status     string `json:"status"`
+	Priority   string `json:"priority"`
+	AssigneeID *uint  `json:"assignee_id"`
+}
+
 func CreateTicket(c *fiber.Ctx) error {
 	var input CreateTicketInput
 
@@ -90,6 +96,53 @@ func GetTicketById(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Successfully get ticket By ID",
+		"data":    ticket,
+	})
+}
+
+func UpdateTicket(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	var ticket models.Ticket
+
+	// cek dulu apakah ID masih ada di db
+	if err := config.DB.First(&ticket, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Can't Find Ticket",
+		})
+	}
+
+	var input UpdateTicketInput
+
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "JSON Formats not valid" + err.Error(),
+		})
+	}
+
+	// Menyiapkan data yanga kan diperbaharui
+	updateData := make(map[string]interface{})
+
+	if input.Status != "" {
+		updateData["status"] = input.Status
+	}
+
+	if input.Priority != "" {
+		updateData["priority"] = input.Priority
+	}
+
+	if input.AssigneeID != nil {
+		updateData["assignee_id"] = input.AssigneeID
+	}
+
+	// Simpan perubahan ke db
+	config.DB.Model(&ticket).Updates(updateData)
+
+	// Load ulang data ticket dan preload reporter dan assignee
+	config.DB.Preload("Reporter").Preload("Assignee").First(&ticket, id)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Ticket Updated",
 		"data":    ticket,
 	})
 }
