@@ -120,7 +120,7 @@ func UpdateTicket(c *fiber.Ctx) error {
 		})
 	}
 
-	// Menyiapkan data yanga kan diperbaharui
+	// Menyiapkan data yanga kan diperbaharui, ini menggunakan partial update dengan kata lain ketika update ID ini, maka tidak akan menimpa data yang tidak dikirim, melainkan hanya mengubah kalau kolom yang dilakukan perubahan
 	updateData := make(map[string]interface{})
 
 	if input.Status != "" {
