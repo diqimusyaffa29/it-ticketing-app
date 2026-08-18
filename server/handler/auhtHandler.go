@@ -3,8 +3,10 @@ package handler
 import (
 	"ticketing-it-app/server/config"
 	"ticketing-it-app/server/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -68,4 +70,57 @@ func Register(c *fiber.Ctx) error {
 		"message": "Registration success",
 		"data":    user,
 	})
+}
+
+func Login(c *fiber.Ctx) error {
+	var input LoginInput
+
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid JSON Formats",
+		})
+	}
+
+	// Cari dulu email user yang login
+	var user models.User
+	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Wrong Email",
+		})
+	}
+
+	// Jka email ada, maka selanjutnya dilakukan pengecekan Password
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Wrong Password",
+		})
+	}
+
+	// kalau sudah match email dan passwordnya, buat jwt
+	claims := jwt.MapClaims{
+		"user_id": user.ID,
+		"role":    user.Role,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	t, err := token.SignedString(JWTSecret)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to generate JWT",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Login Successfull",
+		"token":   t,
+		"user": fiber.Map{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"role":  user.Role,
+		},
+	})
+
 }
