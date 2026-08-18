@@ -16,11 +16,16 @@ func main() {
 
 	// Buat routing group
 	api := app.Group("/api")
+	// API For ticket
 	api.Post("/createTicket", handler.CreateTicket)
 	api.Get("/getTickets", handler.GetTickets)
 	api.Get("/getTicketById/:id", handler.GetTicketById)
 	api.Put("/updateTicket/:id", handler.UpdateTicket)
 	api.Delete("/deleteTicket/:id", handler.DeleteTicket)
+
+	// API For Auth Registers and Login
+	auth := api.Group("/auth")
+	auth.Post("/register", handler.Register)
 
 	// Listen di port 8080
 	app.Listen(":8080")
