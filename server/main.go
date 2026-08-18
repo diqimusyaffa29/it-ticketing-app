@@ -26,6 +26,7 @@ func main() {
 	// API For Auth Registers and Login
 	auth := api.Group("/auth")
 	auth.Post("/register", handler.Register)
+	auth.Post("/login", handler.Login)
 
 	// Listen di port 8080
 	app.Listen(":8080")
