@@ -24,13 +24,19 @@ func main() {
 	auth.Post("/register", handler.Register)
 	auth.Post("/login", handler.Login)
 
-	// 2. Endpoint Terproteksi (Wajib Token JWT)
+	// All route inside /tickets require JWT Login
 	tickets := api.Group("/tickets", middleware.Protected())
+
+	// Pelapor, Teknisi, & Admin BISA membuat dan melihat tiket
 	tickets.Post("/", handler.CreateTicket)
 	tickets.Get("/", handler.GetTickets)
 	tickets.Get("/:id", handler.GetTicketById)
-	tickets.Put("/:id", handler.UpdateTicket)
-	tickets.Delete("/:id", handler.DeleteTicket)
+
+	// HANYA Admin & Teknisi yang BISA mengubah tiket (Update Status/Assignee)
+	tickets.Put("/:id", middleware.RequireRoles("Admin", "Teknisi"), handler.UpdateTicket)
+
+	// HANYA Admin yang BISA menghapus tiket
+	tickets.Delete("/:id", middleware.RequireRoles("Admin"), handler.DeleteTicket)
 
 	// Listen di port 8080
 	app.Listen(":8080")
