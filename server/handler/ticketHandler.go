@@ -11,7 +11,6 @@ type CreateTicketInput struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Priority    string `json:"priority"`
-	ReporterID  uint   `json:"reporter_id"`
 	AssigneeID  *uint  `json:"assignee_id"`
 }
 
@@ -22,6 +21,8 @@ type UpdateTicketInput struct {
 }
 
 func CreateTicket(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
 	var input CreateTicketInput
 
 	// parsing JSON body dari client
@@ -44,7 +45,7 @@ func CreateTicket(c *fiber.Ctx) error {
 		Description: input.Description,
 		Status:      "OPEN",
 		Priority:    input.Priority,
-		ReporterID:  input.ReporterID,
+		ReporterID:  userID,
 		AssigneeID:  input.AssigneeID,
 	}
 
