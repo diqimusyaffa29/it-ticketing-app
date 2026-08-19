@@ -38,10 +38,10 @@ func Protected() fiber.Handler {
 
 		if err != nil || !token.Valid {
 			// Print error ke terminal server Golang untuk debugging
-			fmt.Println("--- DEBUG JWT ERROR ---")
-			fmt.Println("Token diterima:", tokenString)
-			fmt.Println("Pesan Error    :", err)
-			fmt.Println("-----------------------")
+			// fmt.Println("--- DEBUG JWT ERROR ---")
+			// fmt.Println("Token diterima:", tokenString)
+			// fmt.Println("Pesan Error    :", err)
+			// fmt.Println("-----------------------")
 
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid or expired token: " + err.Error(),
