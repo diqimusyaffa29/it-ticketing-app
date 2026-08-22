@@ -1,0 +1,62 @@
+# ==========================================
+# Operating System & IDEs
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# ==========================================
+# Environment Variables & Logs (Global)
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+*.log
+
+# ==========================================
+# Client (Next.js / Node.js)
+# ==========================================
+client/node_modules/
+client/.next/
+client/out/
+client/build/
+client/dist/
+client/.vercel
+client/npm-debug.log*
+client/yarn-debug.log*
+client/yarn-error.log*
+client/pnpm-debug.log*
+
+# ==========================================
+# Server (Golang)
+# ==========================================
+# Binary Output
+server/*.exe
+server/*.exe~
+server/*.dll
+server/*.so
+server/*.dylib
+server/*.test
+server/*.out
+server/main
+server/server
+server/app
+
+# Live Reload Temporary Files (Air tool)
+server/tmp/
+
+# Dependency Vendor Folder (Uncomment jika tidak ingin commit folder vendor)
+# server/vendor/
