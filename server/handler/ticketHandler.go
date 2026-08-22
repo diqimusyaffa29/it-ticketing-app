@@ -135,6 +135,20 @@ func UpdateTicket(c *fiber.Ctx) error {
 	updateData := make(map[string]interface{})
 
 	if input.Status != "" {
+		// Daftar status yang diizinkan
+		allowedStatuses := map[string]bool{
+			"OPEN":        true,
+			"IN_PROGRESS": true,
+			"RESOLVED":    true,
+			"CLOSED":      true,
+		}
+
+		if !allowedStatuses[input.Status] {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Status tidak valid. Gunakan: OPEN, IN_PROGRESS, RESOLVED, atau CLOSED",
+			})
+		}
+
 		updateData["status"] = input.Status
 	}
 
@@ -147,7 +161,11 @@ func UpdateTicket(c *fiber.Ctx) error {
 	}
 
 	// Simpan perubahan ke db
-	config.DB.Model(&ticket).Updates(updateData)
+	if err := config.DB.Model(&ticket).Updates(updateData).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update ticket data",
+		})
+	}
 
 	// Load ulang data ticket dan preload reporter dan assignee
 	config.DB.Preload("Reporter").Preload("Assignee").First(&ticket, id)
