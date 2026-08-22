@@ -64,13 +64,23 @@ func CreateTicket(c *fiber.Ctx) error {
 }
 
 func GetTickets(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+	role := c.Locals("role").(string)
 	var tickets []models.Ticket
 
 	// mengambil semua data tickets dengan preload reporter dan assignee
-	result := config.DB.Preload("Reporter").Preload("Assignee").Find(&tickets)
-	if result.Error != nil {
+	result := config.DB.Preload("Reporter").Preload("Assignee") //ini sementara akan menjadi SELECT * FROM
+
+	// lalu cek apakah role pada jwt itu adalah "Pelapor", jika iya maka hanya akan menampilkan punya pelapor itu saja
+	if role == "Pelapor" {
+		result = result.Where("reporter_id = ?", userID) // Kalau ini true, makan querynya akan menjadi SELECT * FROM tickets WHERE reporter_id = 1(misal)
+	}
+
+	// Jika bukan pelapor maka akan dilanjutkan ke bawah ini
+
+	if err := result.Find(&tickets).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to get ticket data:" + result.Error.Error(),
+			"error": "Failed to get tickets data",
 		})
 	}
 
