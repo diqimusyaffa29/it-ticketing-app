@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setAuthToken } from "@/lib/auth";
 import api from "@/lib/axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginPage() {
@@ -14,6 +14,9 @@ export default function LoginPage() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+
+    const searchParams = useSearchParams()
+    const isRegistered = searchParams.get('registered') === 'true'
 
 
     const handleSubmit = async (e: React.SubmitEvent) => {
@@ -48,6 +51,12 @@ export default function LoginPage() {
     }
 
     return (
+        <>
+        {isRegistered && (
+            <div className="p-3 text-sm text-green-600 bg-green-100 rounded-sm border border-green-200">
+                Registration success, please login with your new account
+            </div>
+        )}
         <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
             <Card className="w-full max-w-md shadow-lg">
                 <CardHeader className="space-y-1">
@@ -104,5 +113,6 @@ export default function LoginPage() {
                 </form>
             </Card>
         </div>
+        </>
     )
 }
