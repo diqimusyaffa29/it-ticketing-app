@@ -33,7 +33,7 @@ export default function RegsisterPage() {
             })
 
             // Kalau sudah berhasil mendaftarkan akun, maka akan langsung diredirect ke halaman login
-            router.push('/login?registered=true')
+            router.replace('/login?registered=true')
         } catch (err: any) {
             if (err.response && err.response.data && err.response.data.error) {
                 setError(err.response.data.error);

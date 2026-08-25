@@ -38,7 +38,7 @@ export default function LoginPage() {
             setAuthToken(token)
 
             // Jika sudah lalu kita redirect langsung dari user login ke halaman dasboard
-            router.push('/dashboard')
+            router.replace('/dashboard')
         } catch (err: any) {
             if (err.response && err.response.data && err.response.data.error) {
                 setError(err.response.data.error);
