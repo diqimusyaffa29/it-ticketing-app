@@ -11,7 +11,7 @@ export function proxy(request: NextRequest) {
 
     // sebaliknya, jika sudah login tapi ingin mengakses halaman login atau register maka akan dialihkan ke halaman dashboard
     if (token && (pathname === '/login' || pathname === '/regiter')) {
-        return NextResponse.redirect(new URL('/dasboard', request.url))
+        return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
     return NextResponse.next()
