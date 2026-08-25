@@ -6,6 +6,7 @@ import (
 	"ticketing-it-app/server/middleware"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -14,6 +15,14 @@ func main() {
 
 	// Inisiasi FIber map
 	app := fiber.New()
+
+	// MIddleware CORS
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authrorization",
+		AllowMethods:     "GET, POST, HEAD, PUT, DELETE, PATCH, OPTIONS",
+		AllowCredentials: true,
+	}))
 
 	// Buat routing group
 	api := app.Group("/api")
