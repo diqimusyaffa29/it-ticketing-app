@@ -32,7 +32,7 @@ export default function DashboardPage() {
                 if (!cancelled) {
                     setTickets(res.data.data || res.data)
                 }
-            } catch (err: any) {
+            } catch {
                 if (!cancelled) {
                     setError('Failed to get tickets from server')
                 }
@@ -106,7 +106,7 @@ export default function DashboardPage() {
                                     </TableRow>
                                 ) : (
                                     tickets.map((ticket, index: number) => (
-                                        <TableRow key={ticket.id || ticket.ID || `ticket-${index}`}>
+                                        <TableRow key={ticket.id || `ticket-${index}`}>
                                             <TableCell className="font-semibold">#{ticket.id}</TableCell>
                                             <TableCell className="font-medium">{ticket.title}</TableCell>
                                             <TableCell>{renderStatusBadge(ticket.status)}</TableCell>
