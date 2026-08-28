@@ -2,14 +2,14 @@ package models
 
 type Ticket struct {
 	BaseModel
-	Title       string
-	Description string
-	Status      string
-	Priority    string
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	Priority    string `json:"priority"`
 
-	ReporterID uint
-	Reporter   User `gorm:"foreignKey:ReporterID"`
+	ReporterID uint `json:"reporter_id"`
+	Reporter   User `json:"reporter" gorm:"foreignKey:ReporterID"`
 
-	AssigneeID *uint `gorm:"default:null"`
-	Assignee   *User `gorm:"foreignKey:AssigneeID"`
+	AssigneeID *uint `json:"assignee_id" gorm:"default:null"`
+	Assignee   *User `json:"assignee" gorm:"foreignKey:AssigneeID"`
 }
