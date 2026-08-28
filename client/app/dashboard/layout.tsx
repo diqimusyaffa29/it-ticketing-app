@@ -14,7 +14,9 @@ export default function DashboardLayout({
     const [role, setRole] = useState<string | null>(null);
 
     useEffect(() => {
-        setRole(getUserRole());
+        Promise.resolve().then(() => {
+            setRole(getUserRole());
+        });
     }, []);
 
     const handleLogout = () => {
@@ -43,7 +45,7 @@ export default function DashboardLayout({
                 {/* Profil Singkat & Logout */}
                 <div className="pt-6 border-t border-slate-800 space-y-3">
                     <div className="text-xs text-slate-400">
-                        Login sebagai:{' '}
+                        Login as:{' '}
                         <span className="font-semibold text-white uppercase">{role || 'USER'}</span>
                     </div>
                     <Button
