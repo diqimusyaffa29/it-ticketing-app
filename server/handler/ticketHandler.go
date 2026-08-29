@@ -11,12 +11,14 @@ type CreateTicketInput struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Priority    string `json:"priority"`
+	Unit        string `json:"unit"`
 	AssigneeID  *uint  `json:"assignee_id"`
 }
 
 type UpdateTicketInput struct {
 	Status     string `json:"status"`
 	Priority   string `json:"priority"`
+	Unit       string `json:"unit"`
 	AssigneeID *uint  `json:"assignee_id"`
 }
 
@@ -33,9 +35,9 @@ func CreateTicket(c *fiber.Ctx) error {
 	}
 
 	// validasi sederhana
-	if input.Title == "" || input.Description == "" {
+	if input.Title == "" || input.Description == "" || input.Unit == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Title and Description must be filled",
+			"error": "Title, Description and Unit must be filled",
 		})
 	}
 
@@ -45,6 +47,7 @@ func CreateTicket(c *fiber.Ctx) error {
 		Description: input.Description,
 		Status:      "OPEN",
 		Priority:    input.Priority,
+		Unit:        input.Unit,
 		ReporterID:  userID,
 		AssigneeID:  input.AssigneeID,
 	}
@@ -154,6 +157,10 @@ func UpdateTicket(c *fiber.Ctx) error {
 
 	if input.Priority != "" {
 		updateData["priority"] = input.Priority
+	}
+
+	if input.Unit != "" {
+		updateData["unit"] = input.Unit
 	}
 
 	if input.AssigneeID != nil {
