@@ -6,6 +6,7 @@ type Ticket struct {
 	Description string `json:"description"`
 	Status      string `json:"status"`
 	Priority    string `json:"priority"`
+	Unit        string `json:"unit"`
 
 	ReporterID uint `json:"reporter_id"`
 	Reporter   User `json:"reporter" gorm:"foreignKey:ReporterID"`
