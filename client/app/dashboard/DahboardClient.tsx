@@ -17,6 +17,7 @@ interface Ticket {
     status: string;
     priority: string;
     unit: string;
+    reporter_name: string;
     reporter?: { Name: string }
     assignee?: { Name: string }
 }
@@ -58,7 +59,11 @@ export default function DashboardClient() {
         description: '',
         priority: 'LOW',
         unit: '',
+        reporter_name: ''
     });
+
+    const [userRole, setUserRole] = useState<string | null>(null)
+    const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
 
     const loadTickets = useCallback(async () => {
         try {
@@ -98,7 +103,7 @@ export default function DashboardClient() {
         try {
             await api.post('/tickets', formData)
             setIsDialogOpen(false) //jika berhasil akan tutup modal 
-            setFormData({ title: '', description: '', priority: 'LOW', unit: '' }) //reset form kembali
+            setFormData({ title: '', description: '', priority: 'LOW', unit: '', reporter_name: '' }) //reset form kembali
             loadTickets()
         } catch {
             alert('Failed to make new ticket')
@@ -168,6 +173,15 @@ export default function DashboardClient() {
                                     ))}
                                 </select>
                             </div>
+                            <div>
+                                <label className="text-sm font-medium mb-1 block">Reporter Name</label>
+                                <Input
+                                    required
+                                    value={formData.reporter_name}
+                                    onChange={(e) => setFormData({ ...formData, reporter_name: e.target.value })}
+                                    placeholder="Masukkan nama"
+                                />
+                            </div>
                             <Button type="submit" className="w-full" disabled={isSubmitting}>
                                 {isSubmitting ? 'Menyimpan...' : 'Kirim Tiket'}
                             </Button>
@@ -194,7 +208,8 @@ export default function DashboardClient() {
                                     <TableHead>Status</TableHead>
                                     <TableHead>Priority</TableHead>
                                     <TableHead>Unit</TableHead>
-                                    <TableHead>Reporter</TableHead>
+                                    <TableHead>Reporter Account</TableHead>
+                                    <TableHead>Reporter Name</TableHead>
                                     <TableHead>Technician</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -218,6 +233,7 @@ export default function DashboardClient() {
                                             </TableCell>
                                             <TableCell>{ticket.unit || '-'}</TableCell>
                                             <TableCell>{ticket.reporter?.Name || '-'}</TableCell>
+                                            <TableCell>{ticket.reporter_name || '-'}</TableCell>
                                             <TableCell>{ticket.assignee?.Name || 'Unassigned'}</TableCell>
                                         </TableRow>
                                     ))
