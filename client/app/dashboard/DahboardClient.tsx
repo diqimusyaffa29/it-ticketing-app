@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { getUserRole } from "@/lib/auth";
 import api from "@/lib/axios";
 import { useCallback, useEffect, useState } from "react";
 
@@ -63,7 +64,13 @@ export default function DashboardClient() {
     });
 
     const [userRole, setUserRole] = useState<string | null>(null)
+    const [isUpdateOpen, setIsUpdateOpen] = useState(false)
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
+    const [updateStatus, setUpdateStatus] = useState('')
+    const [isUpdating, setIsUpdating] = useState(false)
+
+    // Ambil role
+
 
     const loadTickets = useCallback(async () => {
         try {
@@ -78,6 +85,7 @@ export default function DashboardClient() {
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
+        setUserRole(getUserRole())
         loadTickets();
     }, [loadTickets]);
 
@@ -111,6 +119,49 @@ export default function DashboardClient() {
             setIsSubmitting(false)
         }
     }
+
+    // Function untuk membuka modal dengan data ticket yang dipilih
+    const openUpdateModal = (ticket: Ticket) => {
+        setSelectedTicket(ticket)
+        setUpdateStatus(ticket.status)
+        setIsUpdateOpen(true)
+    }
+
+    // Function untuk mengirim PUT ke BE
+    const handleUpdateTicket = async (e: React.SubmitEvent) => {
+        e.preventDefault()
+        if (!selectedTicket) return;
+
+        setIsUpdating(true)
+        try {
+            await api.put(`/tickets/${selectedTicket.id}`, {
+                status: updateStatus
+            });
+            setIsUpdateOpen(false) //tutup dialog ketika sudah bisa hit api tanpa error
+            loadTickets()
+        } catch {
+            alert('Gagal mengupdate tiket');
+        } finally {
+            setIsUpdating(false);
+        }
+    }
+
+    const handleClaimTicket = async (ticketId: number) => {
+        // Tampilkan konfirmasi agar tidak kepencet
+        if (!confirm("Anda yakin ingin mengambil tiket ini?")) return;
+
+        try {
+            // Kita cukup kirim status IN_PROGRESS, backend yang akan otomatis mengisi Assignee-nya
+            await api.put(`/tickets/${ticketId}`, {
+                status: 'IN_PROGRESS'
+            });
+
+            // Refresh data tabel setelah berhasil
+            loadTickets();
+        } catch {
+            alert('Gagal mengambil tiket');
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -188,6 +239,39 @@ export default function DashboardClient() {
                         </form>
                     </DialogContent>
                 </Dialog>
+                {/* Modal Update Status Tiket */}
+                <Dialog open={isUpdateOpen} onOpenChange={setIsUpdateOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Update Ticket #{selectedTicket?.id}</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleUpdateTicket} className="space-y-4 mt-4">
+                            <div>
+                                <label className="text-sm font-medium mb-1 block">Ticket Title</label>
+                                <Input value={selectedTicket?.title || ''} disabled className="bg-slate-100" />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-1 block">Ticket Status</label>
+                                <select
+                                    className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    value={updateStatus}
+                                    onChange={(e) => setUpdateStatus(e.target.value)}
+                                >
+                                    <option value="OPEN">OPEN (Menunggu)</option>
+                                    <option value="IN_PROGRESS">IN PROGRESS (Sedang Dikerjakan)</option>
+                                    <option value="RESOLVED">RESOLVED (Selesai/Terselesaikan)</option>
+                                    <option value="CLOSED">CLOSED (Ditutup)</option>
+                                </select>
+                            </div>
+
+                            {/* Area untuk pilih Teknisi (Bisa ditambahkan nanti) */}
+
+                            <Button type="submit" className="w-full" disabled={isUpdating}>
+                                {isUpdating ? 'Menyimpan...' : 'Update Tiket'}
+                            </Button>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <Card>
@@ -211,6 +295,9 @@ export default function DashboardClient() {
                                     <TableHead>Reporter Account</TableHead>
                                     <TableHead>Reporter Name</TableHead>
                                     <TableHead>Technician</TableHead>
+                                    {(userRole === 'Admin' || userRole === 'Teknisi') &&(
+                                        <TableHead>Actions</TableHead>
+                                    )}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -235,6 +322,33 @@ export default function DashboardClient() {
                                             <TableCell>{ticket.reporter?.Name || '-'}</TableCell>
                                             <TableCell>{ticket.reporter_name || '-'}</TableCell>
                                             <TableCell>{ticket.assignee?.Name || 'Unassigned'}</TableCell>
+                                            <TableCell className="text-right space-x-2">
+                                                {/* Logika khusus Teknisi & Admin */}
+                                                {(userRole === 'Admin' || userRole === 'Teknisi') && (
+                                                    <>
+                                                        {ticket.status === 'OPEN' ? (
+                                                            // Jika masih OPEN, munculkan tombol cepat AMBIL TIKET
+                                                            <Button
+                                                                variant="default"
+                                                                size="sm"
+                                                                className="bg-blue-600 hover:bg-blue-700"
+                                                                onClick={() => handleClaimTicket(ticket.id)}
+                                                            >
+                                                                Take Ticket
+                                                            </Button>
+                                                        ) : (
+                                                            // Jika sudah IN_PROGRESS / status lain, munculkan tombol UPDATE biasa
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => openUpdateModal(ticket)}
+                                                            >
+                                                                Update
+                                                            </Button>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 )}
