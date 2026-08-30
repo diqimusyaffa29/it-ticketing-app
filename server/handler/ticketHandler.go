@@ -8,18 +8,20 @@ import (
 )
 
 type CreateTicketInput struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Priority    string `json:"priority"`
-	Unit        string `json:"unit"`
-	AssigneeID  *uint  `json:"assignee_id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Priority     string `json:"priority"`
+	Unit         string `json:"unit"`
+	ReporterName string `json:"reporter_name"`
+	AssigneeID   *uint  `json:"assignee_id"`
 }
 
 type UpdateTicketInput struct {
-	Status     string `json:"status"`
-	Priority   string `json:"priority"`
-	Unit       string `json:"unit"`
-	AssigneeID *uint  `json:"assignee_id"`
+	Status       string `json:"status"`
+	Priority     string `json:"priority"`
+	Unit         string `json:"unit"`
+	ReporterName string `json:"reporter_name"`
+	AssigneeID   *uint  `json:"assignee_id"`
 }
 
 func CreateTicket(c *fiber.Ctx) error {
@@ -43,13 +45,14 @@ func CreateTicket(c *fiber.Ctx) error {
 
 	// Buat instance Ticket
 	ticket := models.Ticket{
-		Title:       input.Title,
-		Description: input.Description,
-		Status:      "OPEN",
-		Priority:    input.Priority,
-		Unit:        input.Unit,
-		ReporterID:  userID,
-		AssigneeID:  input.AssigneeID,
+		Title:        input.Title,
+		Description:  input.Description,
+		Status:       "OPEN",
+		Priority:     input.Priority,
+		Unit:         input.Unit,
+		ReporterName: input.ReporterName,
+		ReporterID:   userID,
+		AssigneeID:   input.AssigneeID,
 	}
 
 	// Proses simpan ke db via gorm
@@ -161,6 +164,10 @@ func UpdateTicket(c *fiber.Ctx) error {
 
 	if input.Unit != "" {
 		updateData["unit"] = input.Unit
+	}
+
+	if input.ReporterName != "" {
+		updateData["reporter_name"] = input.ReporterName
 	}
 
 	if input.AssigneeID != nil {
