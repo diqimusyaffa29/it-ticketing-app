@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"strings"
 	"ticketing-it-app/server/config"
 	"ticketing-it-app/server/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -53,6 +55,9 @@ func CreateTicket(c *fiber.Ctx) error {
 		ReporterName: input.ReporterName,
 		ReporterID:   userID,
 		AssigneeID:   input.AssigneeID,
+		BaseModel: models.BaseModel{
+			CreatedBy: userID,
+		},
 	}
 
 	// Proses simpan ke db via gorm
@@ -120,9 +125,19 @@ func GetTicketById(c *fiber.Ctx) error {
 func UpdateTicket(c *fiber.Ctx) error {
 	id := c.Params("id")
 
+	// 1. GUNAKAN c.Locals() untuk membaca data dari Middleware JWT di Fiber
+	userID, okUser := c.Locals("user_id").(uint)
+	userRole, okRole := c.Locals("role").(string)
+
+	if !okUser || !okRole {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "User context tidak valid",
+		})
+	}
+
 	var ticket models.Ticket
 
-	// cek dulu apakah ID masih ada di db
+	// Cek apakah tiket ada di DB
 	if err := config.DB.First(&ticket, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Can't Find Ticket",
@@ -133,15 +148,19 @@ func UpdateTicket(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "JSON Formats not valid" + err.Error(),
+			"error": "JSON Formats not valid: " + err.Error(),
 		})
 	}
 
-	// Menyiapkan data yanga kan diperbaharui, ini menggunakan partial update dengan kata lain ketika update ID ini, maka tidak akan menimpa data yang tidak dikirim, melainkan hanya mengubah kalau kolom yang dilakukan perubahan
+	// Map untuk partial update
 	updateData := make(map[string]interface{})
 
+	if strings.EqualFold(userRole, "Teknisi") && ticket.AssigneeID == nil {
+		updateData["assignee_id"] = userID
+	}
+
+	// Validasi & masukan field input ke updateData
 	if input.Status != "" {
-		// Daftar status yang diizinkan
 		allowedStatuses := map[string]bool{
 			"OPEN":        true,
 			"IN_PROGRESS": true,
@@ -154,7 +173,6 @@ func UpdateTicket(c *fiber.Ctx) error {
 				"error": "Status tidak valid. Gunakan: OPEN, IN_PROGRESS, RESOLVED, atau CLOSED",
 			})
 		}
-
 		updateData["status"] = input.Status
 	}
 
@@ -170,18 +188,22 @@ func UpdateTicket(c *fiber.Ctx) error {
 		updateData["reporter_name"] = input.ReporterName
 	}
 
+	// Jika Admin menentukan AssigneeID secara manual lewat JSON
 	if input.AssigneeID != nil {
 		updateData["assignee_id"] = input.AssigneeID
 	}
 
-	// Simpan perubahan ke db
+	now := time.Now()
+	updateData["updated_at"] = now
+	updateData["updated_by"] = userID
+	// Simpan perubahan ke DB
 	if err := config.DB.Model(&ticket).Updates(updateData).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update ticket data",
 		})
 	}
 
-	// Load ulang data ticket dan preload reporter dan assignee
+	// Load ulang data ticket terbaru beserta Preload relasinya
 	config.DB.Preload("Reporter").Preload("Assignee").First(&ticket, id)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
