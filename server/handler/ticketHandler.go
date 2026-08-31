@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"ticketing-it-app/server/config"
 	"ticketing-it-app/server/models"
@@ -19,11 +22,12 @@ type CreateTicketInput struct {
 }
 
 type UpdateTicketInput struct {
-	Status       string `json:"status"`
-	Priority     string `json:"priority"`
-	Unit         string `json:"unit"`
-	ReporterName string `json:"reporter_name"`
-	AssigneeID   *uint  `json:"assignee_id"`
+	Status       string  `json:"status"`
+	Priority     string  `json:"priority"`
+	Unit         string  `json:"unit"`
+	ReporterName string  `json:"reporter_name"`
+	AssigneeID   *uint   `json:"assignee_id"`
+	ProofImage   *string `json:"proof_image"`
 }
 
 func CreateTicket(c *fiber.Ctx) error {
@@ -196,6 +200,28 @@ func UpdateTicket(c *fiber.Ctx) error {
 	now := time.Now()
 	updateData["updated_at"] = now
 	updateData["updated_by"] = userID
+
+	// Logic untuk menambahkan data foto bukti
+	file, errFile := c.FormFile("proof_image")
+	if errFile == nil {
+		// Memastikan folder uploads sudah ada (jika belum ada maka akan otomatis terbuat)
+		os.MkdirAll("./uploads", os.ModePerm)
+
+		// Beri nama unik menggunakan timestamp agar tidak ada file duplikat
+		filename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
+		savePath := fmt.Sprintf("./uploads/%s", filename)
+
+		// Simpan file fisik tadi ke dalam server
+		if errSave := c.SaveFile(file, savePath); errSave != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to save image proof:" + errSave.Error(),
+			})
+		}
+
+		// Masukkan string path url tadi ke dalam data yang akan di save ke database
+		updateData["proof_image"] = "/uploads/" + filename
+	}
+
 	// Simpan perubahan ke DB
 	if err := config.DB.Model(&ticket).Updates(updateData).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
