@@ -19,6 +19,7 @@ interface Ticket {
     priority: string;
     unit: string;
     reporter_name: string;
+    proof_image?: string;
     reporter?: { Name: string }
     assignee?: { Name: string }
 }
@@ -67,6 +68,7 @@ export default function DashboardClient() {
     const [isUpdateOpen, setIsUpdateOpen] = useState(false)
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
     const [updateStatus, setUpdateStatus] = useState('')
+    const [proofFile, setProofFile] = useState<File | null>(null)
     const [isUpdating, setIsUpdating] = useState(false)
 
     // Ambil role
@@ -124,6 +126,7 @@ export default function DashboardClient() {
     const openUpdateModal = (ticket: Ticket) => {
         setSelectedTicket(ticket)
         setUpdateStatus(ticket.status)
+        setProofFile(null);
         setIsUpdateOpen(true)
     }
 
@@ -134,10 +137,21 @@ export default function DashboardClient() {
 
         setIsUpdating(true)
         try {
-            await api.put(`/tickets/${selectedTicket.id}`, {
-                status: updateStatus
+            const updateFormData = new FormData();
+            updateFormData.append('status', updateStatus);
+
+            // Tambahkan file jika ada yang dipilih
+            if (proofFile) {
+                updateFormData.append('proof_image', proofFile);
+            }
+
+            await api.put(`/tickets/${selectedTicket.id}`, updateFormData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
             setIsUpdateOpen(false) //tutup dialog ketika sudah bisa hit api tanpa error
+            setProofFile(null);
             loadTickets()
         } catch {
             alert('Gagal mengupdate tiket');
@@ -161,6 +175,12 @@ export default function DashboardClient() {
         } catch {
             alert('Gagal mengambil tiket');
         }
+    };
+
+    const getImageUrl = (path: string) => {
+        if (path.startsWith('http')) return path;
+        const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        return `${baseURL.replace(/\/$/, '')}${path}`;
     };
 
     return (
@@ -263,8 +283,24 @@ export default function DashboardClient() {
                                     <option value="CLOSED">CLOSED (Ditutup)</option>
                                 </select>
                             </div>
-
-                            {/* Area untuk pilih Teknisi (Bisa ditambahkan nanti) */}
+                            {/* Input File Foto Bukti */}
+                            <div>
+                                <label className="text-sm font-medium mb-1 block">Upload Photo Evidence of Work</label>
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        if (e.target.files && e.target.files[0]) {
+                                            setProofFile(e.target.files[0]);
+                                        }
+                                    }}
+                                />
+                                {selectedTicket?.proof_image && !proofFile && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        Photo is uploaded, pick a next file if you want to change it
+                                    </p>
+                                )}
+                            </div>
 
                             <Button type="submit" className="w-full" disabled={isUpdating}>
                                 {isUpdating ? 'Menyimpan...' : 'Update Tiket'}
@@ -295,7 +331,7 @@ export default function DashboardClient() {
                                     <TableHead>Reporter Account</TableHead>
                                     <TableHead>Reporter Name</TableHead>
                                     <TableHead>Technician</TableHead>
-                                    {(userRole === 'Admin' || userRole === 'Teknisi') &&(
+                                    {(userRole === 'Admin' || userRole === 'Teknisi') && (
                                         <TableHead>Actions</TableHead>
                                     )}
                                 </TableRow>
@@ -322,33 +358,45 @@ export default function DashboardClient() {
                                             <TableCell>{ticket.reporter?.Name || '-'}</TableCell>
                                             <TableCell>{ticket.reporter_name || '-'}</TableCell>
                                             <TableCell>{ticket.assignee?.Name || 'Unassigned'}</TableCell>
-                                            <TableCell className="text-right space-x-2">
-                                                {/* Logika khusus Teknisi & Admin */}
-                                                {(userRole === 'Admin' || userRole === 'Teknisi') && (
-                                                    <>
-                                                        {ticket.status === 'OPEN' ? (
-                                                            // Jika masih OPEN, munculkan tombol cepat AMBIL TIKET
-                                                            <Button
-                                                                variant="default"
-                                                                size="sm"
-                                                                className="bg-blue-600 hover:bg-blue-700"
-                                                                onClick={() => handleClaimTicket(ticket.id)}
-                                                            >
-                                                                Take Ticket
-                                                            </Button>
-                                                        ) : (
-                                                            // Jika sudah IN_PROGRESS / status lain, munculkan tombol UPDATE biasa
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => openUpdateModal(ticket)}
-                                                            >
-                                                                Update
-                                                            </Button>
-                                                        )}
-                                                    </>
+                                            <TableCell>
+                                                {ticket.proof_image ? (
+                                                    <a
+                                                        href={getImageUrl(ticket.proof_image)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-blue-600 underline font-medium hover:text-blue-800"
+                                                    >
+                                                        See Photos
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground">-</span>
                                                 )}
                                             </TableCell>
+                                            {/* Logika khusus Teknisi & Admin */}
+                                            {(userRole === 'Admin' || userRole === 'Teknisi') && (
+                                                <TableCell className="text-right space-x-2">
+                                                    {ticket.status === 'OPEN' ? (
+                                                        // Jika masih OPEN, munculkan tombol cepat AMBIL TIKET
+                                                        <Button
+                                                            variant="default"
+                                                            size="sm"
+                                                            className="bg-blue-600 hover:bg-blue-700"
+                                                            onClick={() => handleClaimTicket(ticket.id)}
+                                                        >
+                                                            Take Ticket
+                                                        </Button>
+                                                    ) : (
+                                                        // Jika sudah IN_PROGRESS / status lain, munculkan tombol UPDATE biasa
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => openUpdateModal(ticket)}
+                                                        >
+                                                            Update
+                                                        </Button>
+                                                    )}
+                                                </TableCell>
+                                            )}
                                         </TableRow>
                                     ))
                                 )}
