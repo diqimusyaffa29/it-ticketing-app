@@ -16,6 +16,8 @@ func main() {
 	// Inisiasi FIber map
 	app := fiber.New()
 
+	app.Static("/uploads", "./uploads")
+
 	// MIddleware CORS
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:3000",
