@@ -54,6 +54,7 @@ server/*.out
 server/main
 server/server
 server/app
+server/uploads
 
 # Live Reload Temporary Files (Air tool)
 server/tmp/
