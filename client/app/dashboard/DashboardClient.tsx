@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { getUserRole } from "@/lib/auth";
 import api from "@/lib/axios";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Ticket {
     id: number;
@@ -69,9 +69,13 @@ export default function DashboardClient() {
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
     const [updateStatus, setUpdateStatus] = useState('')
     const [proofFile, setProofFile] = useState<File | null>(null)
+    const [proofPreview, setProofPreview] = useState<string | null>(null);
     const [isUpdating, setIsUpdating] = useState(false)
 
-    // Ambil role
+    // state kamera
+    const [isCameraActive, setIsCameraActive] = useState(false)
+    const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
+    const videoRef = useRef<HTMLVideoElement | null>(null);
 
 
     const loadTickets = useCallback(async () => {
@@ -90,6 +94,81 @@ export default function DashboardClient() {
         setUserRole(getUserRole())
         loadTickets();
     }, [loadTickets]);
+
+    // fungsi logika kamemra
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" } //priortias kamera belakang
+            })
+            setCameraStream(stream)
+            setIsCameraActive(true)
+
+            // pasang stream ke elemen video
+            setTimeout(() => {
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                }
+            }, 100)
+        } catch (error) {
+            alert("Failed accessing Camera. make sure to allow camera" + error)
+        }
+    }
+
+    const stopCamera = useCallback(() => {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach((track) => track.stop())
+            setCameraStream(null)
+        }
+        setIsCameraActive(false)
+    },[cameraStream])
+    // Matikan stream kamera ketika modal update ditutup
+    useEffect(() => {
+        if (!isUpdateOpen) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            stopCamera();
+        }
+    }, [isUpdateOpen, stopCamera]);
+
+    const capturePhoto = () => {
+        if (!videoRef.current) return;
+
+        const video = videoRef.current;
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    // Buat Objek File dari hasil tangkapan kamera
+                    const capturedFile = new File([blob], `proof_camera_${Date.now()}.jpg`, {
+                        type: "image/jpeg"
+                    });
+                    setProofFile(capturedFile);
+                    setProofPreview(URL.createObjectURL(capturedFile));
+                }
+            }, "image/jpeg", 0.85);
+        }
+
+        // Matikan kamera setelah mengambil foto
+        stopCamera();
+    };
+
+    const handleFileChange = (file: File | null) => {
+        if (file) {
+            setProofFile(file);
+            setProofPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const clearSelectedProof = () => {
+        setProofFile(null);
+        setProofPreview(null);
+    };
 
     const renderStatusBadge = (status: string) => {
         switch (status) {
@@ -124,11 +203,12 @@ export default function DashboardClient() {
 
     // Function untuk membuka modal dengan data ticket yang dipilih
     const openUpdateModal = (ticket: Ticket) => {
-        setSelectedTicket(ticket)
-        setUpdateStatus(ticket.status)
+        setSelectedTicket(ticket);
+        setUpdateStatus(ticket.status);
         setProofFile(null);
-        setIsUpdateOpen(true)
-    }
+        setProofPreview(null);
+        setIsUpdateOpen(true);
+    };
 
     // Function untuk mengirim PUT ke BE
     const handleUpdateTicket = async (e: React.SubmitEvent) => {
@@ -151,10 +231,10 @@ export default function DashboardClient() {
                 },
             });
             setIsUpdateOpen(false) //tutup dialog ketika sudah bisa hit api tanpa error
-            setProofFile(null);
+            clearSelectedProof()
             loadTickets()
         } catch {
-            alert('Gagal mengupdate tiket');
+            alert('Failed updating ticket');
         } finally {
             setIsUpdating(false);
         }
@@ -162,7 +242,7 @@ export default function DashboardClient() {
 
     const handleClaimTicket = async (ticketId: number) => {
         // Tampilkan konfirmasi agar tidak kepencet
-        if (!confirm("Anda yakin ingin mengambil tiket ini?")) return;
+        if (!confirm("Are you sure want to take this ticket??")) return;
 
         try {
             // Kita cukup kirim status IN_PROGRESS, backend yang akan otomatis mengisi Assignee-nya
@@ -173,7 +253,7 @@ export default function DashboardClient() {
             // Refresh data tabel setelah berhasil
             loadTickets();
         } catch {
-            alert('Gagal mengambil tiket');
+            alert('Failed taking the ticket');
         }
     };
 
@@ -259,9 +339,13 @@ export default function DashboardClient() {
                         </form>
                     </DialogContent>
                 </Dialog>
+
                 {/* Modal Update Status Tiket */}
-                <Dialog open={isUpdateOpen} onOpenChange={setIsUpdateOpen}>
-                    <DialogContent>
+                <Dialog open={isUpdateOpen} onOpenChange={(open) => {
+                    setIsUpdateOpen(open);
+                    if (!open) stopCamera();
+                }}>
+                    <DialogContent className="max-w-md">
                         <DialogHeader>
                             <DialogTitle>Update Ticket #{selectedTicket?.id}</DialogTitle>
                         </DialogHeader>
@@ -283,21 +367,63 @@ export default function DashboardClient() {
                                     <option value="CLOSED">CLOSED (Ditutup)</option>
                                 </select>
                             </div>
-                            {/* Input File Foto Bukti */}
-                            <div>
-                                <label className="text-sm font-medium mb-1 block">Upload Photo Evidence of Work</label>
-                                <Input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => {
-                                        if (e.target.files && e.target.files[0]) {
-                                            setProofFile(e.target.files[0]);
-                                        }
-                                    }}
-                                />
-                                {selectedTicket?.proof_image && !proofFile && (
+
+                            {/* BAGIAN UPLOAD & TAKE PICTURE PROOF */}
+                            <div className="space-y-2 border p-3 rounded-md bg-slate-50">
+                                <label className="text-sm font-medium block">Foto Bukti Pengerjaan</label>
+
+                                {/* 1. JIKA KAMERA AKTIF */}
+                                {isCameraActive ? (
+                                    <div className="space-y-2">
+                                        <div className="relative overflow-hidden rounded-md bg-black h-48 flex items-center justify-center">
+                                            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button type="button" onClick={capturePhoto} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                                                📷 Ambil Foto
+                                            </Button>
+                                            <Button type="button" variant="outline" onClick={stopCamera}>
+                                                Batal
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : proofPreview ? (
+                                    /* 2. JIKA SUDAH ADA FOTO YANG DIPILIH / DITANGKAP */
+                                    <div className="space-y-2">
+                                        <div className="relative h-40 w-full overflow-hidden rounded-md border">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={proofPreview} alt="Preview Bukti" className="w-full h-full object-cover" />
+                                        </div>
+                                        <Button type="button" variant="destructive" size="sm" className="w-full" onClick={clearSelectedProof}>
+                                            Delete / Replace Photo
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    /* 3. OPSI PILIHAN UPLOAD / AMBIL FOTO */
+                                    <div className="space-y-3">
+                                        <div className="flex gap-2">
+                                            <Button type="button" variant="outline" className="w-full" onClick={startCamera}>
+                                                📷 Open Camera
+                                            </Button>
+                                        </div>
+                                        <div className="relative text-center text-xs text-muted-foreground uppercase after:absolute after:inset-x-0 after:top-1/2 after:-z-10 after:h-[1px] after:bg-border">
+                                            <span className="bg-slate-50 px-2">or Upload File</span>
+                                        </div>
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                if (e.target.files && e.target.files[0]) {
+                                                    handleFileChange(e.target.files[0]);
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                )}
+
+                                {selectedTicket?.proof_image && !proofFile && !isCameraActive && (
                                     <p className="text-xs text-muted-foreground mt-1">
-                                        Photo is uploaded, pick a next file if you want to change it
+                                        *Foto bukti lama sudah tersimpan di server.
                                     </p>
                                 )}
                             </div>
@@ -331,15 +457,16 @@ export default function DashboardClient() {
                                     <TableHead>Reporter Account</TableHead>
                                     <TableHead>Reporter Name</TableHead>
                                     <TableHead>Technician</TableHead>
+                                    <TableHead>Proof</TableHead>
                                     {(userRole === 'Admin' || userRole === 'Teknisi') && (
-                                        <TableHead>Actions</TableHead>
+                                        <TableHead className="text-right">Actions</TableHead>
                                     )}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {tickets.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                                             No tickets yet.
                                         </TableCell>
                                     </TableRow>
@@ -366,17 +493,15 @@ export default function DashboardClient() {
                                                         rel="noopener noreferrer"
                                                         className="text-xs text-blue-600 underline font-medium hover:text-blue-800"
                                                     >
-                                                        See Photos
+                                                        See work proof Picture
                                                     </a>
                                                 ) : (
                                                     <span className="text-xs text-muted-foreground">-</span>
                                                 )}
                                             </TableCell>
-                                            {/* Logika khusus Teknisi & Admin */}
                                             {(userRole === 'Admin' || userRole === 'Teknisi') && (
                                                 <TableCell className="text-right space-x-2">
                                                     {ticket.status === 'OPEN' ? (
-                                                        // Jika masih OPEN, munculkan tombol cepat AMBIL TIKET
                                                         <Button
                                                             variant="default"
                                                             size="sm"
@@ -386,7 +511,6 @@ export default function DashboardClient() {
                                                             Take Ticket
                                                         </Button>
                                                     ) : (
-                                                        // Jika sudah IN_PROGRESS / status lain, munculkan tombol UPDATE biasa
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
