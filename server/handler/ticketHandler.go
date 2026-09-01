@@ -159,7 +159,7 @@ func UpdateTicket(c *fiber.Ctx) error {
 	// Map untuk partial update
 	updateData := make(map[string]interface{})
 
-	if strings.EqualFold(userRole, "Teknisi") && ticket.AssigneeID == nil {
+	if (strings.EqualFold(userRole, "Teknisi") || strings.EqualFold(userRole, "Admin")) && ticket.AssigneeID == nil {
 		updateData["assignee_id"] = userID
 	}
 
