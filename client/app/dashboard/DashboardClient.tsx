@@ -60,7 +60,7 @@ export default function DashboardClient() {
         title: '',
         description: '',
         priority: 'LOW',
-        unit: '',
+        unit: unitOptions[0].value,
         reporter_name: ''
     });
 
@@ -122,7 +122,7 @@ export default function DashboardClient() {
             setCameraStream(null)
         }
         setIsCameraActive(false)
-    },[cameraStream])
+    }, [cameraStream])
     // Matikan stream kamera ketika modal update ditutup
     useEffect(() => {
         if (!isUpdateOpen) {
@@ -334,7 +334,7 @@ export default function DashboardClient() {
                                 />
                             </div>
                             <Button type="submit" className="w-full" disabled={isSubmitting}>
-                                {isSubmitting ? 'Menyimpan...' : 'Kirim Tiket'}
+                                {isSubmitting ? 'Creating...' : 'Create Ticket'}
                             </Button>
                         </form>
                     </DialogContent>
@@ -370,7 +370,7 @@ export default function DashboardClient() {
 
                             {/* BAGIAN UPLOAD & TAKE PICTURE PROOF */}
                             <div className="space-y-2 border p-3 rounded-md bg-slate-50">
-                                <label className="text-sm font-medium block">Foto Bukti Pengerjaan</label>
+                                <label className="text-sm font-medium block">Work Proof Picture</label>
 
                                 {/* 1. JIKA KAMERA AKTIF */}
                                 {isCameraActive ? (
@@ -380,10 +380,10 @@ export default function DashboardClient() {
                                         </div>
                                         <div className="flex gap-2">
                                             <Button type="button" onClick={capturePhoto} className="w-full bg-emerald-600 hover:bg-emerald-700">
-                                                📷 Ambil Foto
+                                                📷 Take Photo
                                             </Button>
                                             <Button type="button" variant="outline" onClick={stopCamera}>
-                                                Batal
+                                                Cance
                                             </Button>
                                         </div>
                                     </div>
@@ -429,7 +429,7 @@ export default function DashboardClient() {
                             </div>
 
                             <Button type="submit" className="w-full" disabled={isUpdating}>
-                                {isUpdating ? 'Menyimpan...' : 'Update Tiket'}
+                                {isUpdating ? 'Updating...' : 'Update Ticket'}
                             </Button>
                         </form>
                     </DialogContent>
