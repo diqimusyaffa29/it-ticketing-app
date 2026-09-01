@@ -84,7 +84,7 @@ func GetTickets(c *fiber.Ctx) error {
 	var tickets []models.Ticket
 
 	// mengambil semua data tickets dengan preload reporter dan assignee
-	result := config.DB.Preload("Reporter").Preload("Assignee") //ini sementara akan menjadi SELECT * FROM
+	result := config.DB.Order("created_at DESC").Preload("Reporter").Preload("Assignee") //ini sementara akan menjadi SELECT * FROM
 
 	// lalu cek apakah role pada jwt itu adalah "Pelapor", jika iya maka hanya akan menampilkan punya pelapor itu saja
 	if role == "Pelapor" {
@@ -220,6 +220,10 @@ func UpdateTicket(c *fiber.Ctx) error {
 
 		// Masukkan string path url tadi ke dalam data yang akan di save ke database
 		updateData["proof_image"] = "/uploads/" + filename
+	}
+
+	if input.Status == "IN_PROGRESS" {
+		updateData["status"] = "RESOLVED"
 	}
 
 	// Simpan perubahan ke DB
