@@ -12,7 +12,7 @@ import api from "@/lib/axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Ticket {
-    id: number;
+    id: string;
     title: string;
     description: string;
     status: string;
@@ -240,7 +240,7 @@ export default function DashboardClient() {
         }
     }
 
-    const handleClaimTicket = async (ticketId: number) => {
+    const handleClaimTicket = async (ticketId: string) => {
         // Tampilkan konfirmasi agar tidak kepencet
         if (!confirm("Are you sure want to take this ticket??")) return;
 
@@ -406,7 +406,7 @@ export default function DashboardClient() {
                                                 📷 Open Camera
                                             </Button>
                                         </div>
-                                        <div className="relative text-center text-xs text-muted-foreground uppercase after:absolute after:inset-x-0 after:top-1/2 after:-z-10 after:h-[1px] after:bg-border">
+                                        <div className="relative text-center text-xs text-muted-foreground uppercase after:absolute after:inset-x-0 after:top-1/2 after:-z-10 after:h-px after:bg-border">
                                             <span className="bg-slate-50 px-2">or Upload File</span>
                                         </div>
                                         <Input
@@ -449,7 +449,7 @@ export default function DashboardClient() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-20">ID Ticket</TableHead>
+                                    <TableHead className="w-20">No.</TableHead>
                                     <TableHead>Title</TableHead>
                                     <TableHead>Status</TableHead>
                                     <TableHead>Priority</TableHead>
@@ -457,7 +457,7 @@ export default function DashboardClient() {
                                     <TableHead>Reporter Account</TableHead>
                                     <TableHead>Reporter Name</TableHead>
                                     <TableHead>Technician</TableHead>
-                                    <TableHead>Proof</TableHead>
+                                    <TableHead>Evidence of Work</TableHead>
                                     {(userRole === 'Admin' || userRole === 'Teknisi') && (
                                         <TableHead className="text-right">Actions</TableHead>
                                     )}
@@ -473,11 +473,11 @@ export default function DashboardClient() {
                                 ) : (
                                     tickets.map((ticket, index: number) => (
                                         <TableRow key={ticket.id || `ticket-${index}`}>
-                                            <TableCell className="font-semibold">#{ticket.id}</TableCell>
+                                            <TableCell className="font-semibold">#{index +1 }</TableCell>
                                             <TableCell className="font-medium">{ticket.title}</TableCell>
                                             <TableCell>{renderStatusBadge(ticket.status)}</TableCell>
                                             <TableCell>
-                                                <span className="font-mono text-xs font-semibold px-2 py-1 rounded bg-slate-100">
+                                                <span className={`font-mono text-xs font-semibold px-2 py-1 rounded ${ticket.priority == "HIGH" ? "bg-red-500 text-white" : ticket.priority == "MEDIUM" ? "bg-yellow-500 text-white" : "bg-background"}`} >
                                                     {ticket.priority}
                                                 </span>
                                             </TableCell>
