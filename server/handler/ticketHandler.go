@@ -10,28 +10,29 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type CreateTicketInput struct {
-	Title        string `json:"title"`
-	Description  string `json:"description"`
-	Priority     string `json:"priority"`
-	Unit         string `json:"unit"`
-	ReporterName string `json:"reporter_name"`
-	AssigneeID   *uint  `json:"assignee_id"`
+	Title        string     `json:"title"`
+	Description  string     `json:"description"`
+	Priority     string     `json:"priority"`
+	Unit         string     `json:"unit"`
+	ReporterName string     `json:"reporter_name"`
+	AssigneeID   *uuid.UUID `json:"assignee_id"`
 }
 
 type UpdateTicketInput struct {
-	Status       string  `json:"status"`
-	Priority     string  `json:"priority"`
-	Unit         string  `json:"unit"`
-	ReporterName string  `json:"reporter_name"`
-	AssigneeID   *uint   `json:"assignee_id"`
-	ProofImage   *string `json:"proof_image"`
+	Status       string     `json:"status"`
+	Priority     string     `json:"priority"`
+	Unit         string     `json:"unit"`
+	ReporterName string     `json:"reporter_name"`
+	AssigneeID   *uuid.UUID `json:"assignee_id"`
+	ProofImage   *string    `json:"proof_image"`
 }
 
 func CreateTicket(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID := c.Locals("user_id").(uuid.UUID)
 
 	var input CreateTicketInput
 
@@ -79,7 +80,7 @@ func CreateTicket(c *fiber.Ctx) error {
 }
 
 func GetTickets(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID := c.Locals("user_id").(uuid.UUID)
 	role := c.Locals("role").(string)
 	var tickets []models.Ticket
 
@@ -130,7 +131,7 @@ func UpdateTicket(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	// 1. GUNAKAN c.Locals() untuk membaca data dari Middleware JWT di Fiber
-	userID, okUser := c.Locals("user_id").(uint)
+	userID, okUser := c.Locals("user_id").(uuid.UUID)
 	userRole, okRole := c.Locals("role").(string)
 
 	if !okUser || !okRole {
@@ -220,9 +221,6 @@ func UpdateTicket(c *fiber.Ctx) error {
 
 		// Masukkan string path url tadi ke dalam data yang akan di save ke database
 		updateData["proof_image"] = "/uploads/" + filename
-	}
-
-	if input.Status == "IN_PROGRESS" {
 		updateData["status"] = "RESOLVED"
 	}
 
@@ -243,7 +241,7 @@ func UpdateTicket(c *fiber.Ctx) error {
 }
 
 func DeleteTicket(c *fiber.Ctx) error {
-	id := c.Params("id ")
+	id := c.Params("id")
 
 	var ticket models.Ticket
 	// cek apakah id ada
