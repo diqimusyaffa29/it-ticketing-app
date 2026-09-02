@@ -110,11 +110,16 @@ func GetTickets(c *fiber.Ctx) error {
 func GetTicketById(c *fiber.Ctx) error {
 	// untuk mengambil ID dari param ketika hit API
 	id := c.Params("id")
-
+	ticketID, err := uuid.Parse(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ticket ID format",
+		})
+	}
 	var ticket models.Ticket
 
 	// mengmabil data ticket dengan preload dan berdasar ID
-	result := config.DB.Preload("Reporter").Preload("Assignee").Find(&ticket, id)
+	result := config.DB.Preload("Reporter").Preload("Assignee").Where("id = ?", ticketID).Find(&ticket)
 	if result.Error != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Failed to get ticket data by ID" + result.Error.Error(),
@@ -140,10 +145,17 @@ func UpdateTicket(c *fiber.Ctx) error {
 		})
 	}
 
+	ticketID, err := uuid.Parse(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ticket ID format",
+		})
+	}
+
 	var ticket models.Ticket
 
 	// Cek apakah tiket ada di DB
-	if err := config.DB.First(&ticket, id).Error; err != nil {
+	if err := config.DB.Where("id = ?", ticketID).First(&ticket).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Can't Find Ticket",
 		})
@@ -232,7 +244,7 @@ func UpdateTicket(c *fiber.Ctx) error {
 	}
 
 	// Load ulang data ticket terbaru beserta Preload relasinya
-	config.DB.Preload("Reporter").Preload("Assignee").First(&ticket, id)
+	config.DB.Preload("Reporter").Preload("Assignee").Where("id = ?", ticketID).First(&ticket)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Ticket Updated",
@@ -243,9 +255,15 @@ func UpdateTicket(c *fiber.Ctx) error {
 func DeleteTicket(c *fiber.Ctx) error {
 	id := c.Params("id")
 
+	ticketID, err := uuid.Parse(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid ticket ID format",
+		})
+	}
 	var ticket models.Ticket
 	// cek apakah id ada
-	if err := config.DB.First(&ticket, id).Error; err != nil {
+	if err := config.DB.Where("id = ?", ticketID).First(&ticket).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Ticket not Found",
 		})
