@@ -263,11 +263,34 @@ export default function DashboardClient() {
         return `${baseURL.replace(/\/$/, '')}${path}`;
     };
 
+    const ActionButton = ({ ticket }: { ticket: Ticket }) => (
+        ticket.status === 'OPEN' ? (
+            <Button
+                variant="default"
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                onClick={() => handleClaimTicket(ticket.id)}
+            >
+                Take Ticket
+            </Button>
+        ) : (
+            <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={() => openUpdateModal(ticket)}
+            >
+                Update
+            </Button>
+        )
+    );
+
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="space-y-6 px-3 sm:px-0">
+            {/* HEADER: stack vertikal di mobile, sejajar di sm ke atas */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">TICKETING SYSTEM</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">TICKETING SYSTEM</h1>
                     <p className="text-muted-foreground text-sm">
                         List of complaint tickets and assignment management
                     </p>
@@ -275,9 +298,9 @@ export default function DashboardClient() {
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button>+ Create Ticket</Button>
+                        <Button className="w-full sm:w-auto">+ Create Ticket</Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="w-[95vw] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Ticket</DialogTitle>
                         </DialogHeader>
@@ -345,9 +368,11 @@ export default function DashboardClient() {
                     setIsUpdateOpen(open);
                     if (!open) stopCamera();
                 }}>
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="w-[95vw] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
-                            <DialogTitle>Update Ticket #{selectedTicket?.id}</DialogTitle>
+                            <DialogTitle className="text-base sm:text-lg wrap-break-word">
+                                Update Ticket #{selectedTicket?.id}
+                            </DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleUpdateTicket} className="space-y-4 mt-4">
                             <div>
@@ -375,22 +400,22 @@ export default function DashboardClient() {
                                 {/* 1. JIKA KAMERA AKTIF */}
                                 {isCameraActive ? (
                                     <div className="space-y-2">
-                                        <div className="relative overflow-hidden rounded-md bg-black h-48 flex items-center justify-center">
+                                        <div className="relative overflow-hidden rounded-md bg-black h-56 sm:h-48 flex items-center justify-center">
                                             <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-col sm:flex-row gap-2">
                                             <Button type="button" onClick={capturePhoto} className="w-full bg-emerald-600 hover:bg-emerald-700">
                                                 📷 Take Photo
                                             </Button>
-                                            <Button type="button" variant="outline" onClick={stopCamera}>
-                                                Cance
+                                            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={stopCamera}>
+                                                Cancel
                                             </Button>
                                         </div>
                                     </div>
                                 ) : proofPreview ? (
                                     /* 2. JIKA SUDAH ADA FOTO YANG DIPILIH / DITANGKAP */
                                     <div className="space-y-2">
-                                        <div className="relative h-40 w-full overflow-hidden rounded-md border">
+                                        <div className="relative h-48 sm:h-40 w-full overflow-hidden rounded-md border">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img src={proofPreview} alt="Preview Bukti" className="w-full h-full object-cover" />
                                         </div>
@@ -445,87 +470,124 @@ export default function DashboardClient() {
                         <p className="text-center py-8 text-muted-foreground">Loading Tickets...</p>
                     ) : error ? (
                         <p className="text-center py-8 text-red-500">{error}</p>
+                    ) : tickets.length === 0 ? (
+                        <p className="text-center py-8 text-muted-foreground">No tickets yet.</p>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-20">No.</TableHead>
-                                    <TableHead>Title</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Priority</TableHead>
-                                    <TableHead>Unit</TableHead>
-                                    <TableHead>Reporter Account</TableHead>
-                                    <TableHead>Reporter Name</TableHead>
-                                    <TableHead>Technician</TableHead>
-                                    <TableHead>Evidence of Work</TableHead>
-                                    {(userRole === 'Admin' || userRole === 'Teknisi') && (
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    )}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {tickets.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                                            No tickets yet.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    tickets.map((ticket, index: number) => (
-                                        <TableRow key={ticket.id || `ticket-${index}`}>
-                                            <TableCell className="font-semibold">#{index +1 }</TableCell>
-                                            <TableCell className="font-medium">{ticket.title}</TableCell>
-                                            <TableCell>{renderStatusBadge(ticket.status)}</TableCell>
-                                            <TableCell>
-                                                <span className={`font-mono text-xs font-semibold px-2 py-1 rounded ${ticket.priority == "HIGH" ? "bg-red-500 text-white" : ticket.priority == "MEDIUM" ? "bg-yellow-500 text-white" : "bg-background"}`} >
-                                                    {ticket.priority}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>{ticket.unit || '-'}</TableCell>
-                                            <TableCell>{ticket.reporter?.Name || '-'}</TableCell>
-                                            <TableCell>{ticket.reporter_name || '-'}</TableCell>
-                                            <TableCell>{ticket.assignee?.Name || 'Unassigned'}</TableCell>
-                                            <TableCell>
-                                                {ticket.proof_image ? (
-                                                    <a
-                                                        href={getImageUrl(ticket.proof_image)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-xs text-blue-600 underline font-medium hover:text-blue-800"
-                                                    >
-                                                        See work proof Picture
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-xs text-muted-foreground">-</span>
-                                                )}
-                                            </TableCell>
+                        <>
+                            {/* ===== TAMPILAN TABEL — hanya muncul di md ke atas ===== */}
+                            <div className="hidden md:block overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-16 text-center">No.</TableHead>
+                                            <TableHead className="text-center">Title</TableHead>
+                                            <TableHead className="text-center">Status</TableHead>
+                                            <TableHead className="text-center">Priority</TableHead>
+                                            <TableHead className="text-center">Unit</TableHead>
+                                            <TableHead className="text-center">Reporter Account</TableHead>
+                                            <TableHead className="text-center">Reporter Name</TableHead>
+                                            <TableHead className="text-center">Technician</TableHead>
+                                            <TableHead className="text-center">Evidence of Work</TableHead>
                                             {(userRole === 'Admin' || userRole === 'Teknisi') && (
-                                                <TableCell className="text-right space-x-2">
-                                                    {ticket.status === 'OPEN' ? (
-                                                        <Button
-                                                            variant="default"
-                                                            size="sm"
-                                                            className="bg-blue-600 hover:bg-blue-700"
-                                                            onClick={() => handleClaimTicket(ticket.id)}
-                                                        >
-                                                            Take Ticket
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => openUpdateModal(ticket)}
-                                                        >
-                                                            Update
-                                                        </Button>
-                                                    )}
-                                                </TableCell>
+                                                <TableHead className="text-center">Actions</TableHead>
                                             )}
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {tickets.map((ticket, index: number) => (
+                                            <TableRow key={ticket.id || `ticket-${index}`} className="text-center">
+                                                <TableCell className="font-semibold">#{index + 1}</TableCell>
+                                                <TableCell className="font-medium">{ticket.title}</TableCell>
+                                                <TableCell>{renderStatusBadge(ticket.status)}</TableCell>
+                                                <TableCell>
+                                                    <span className={`font-mono text-xs font-semibold px-2 py-1 rounded ${ticket.priority == "HIGH" ? "bg-red-500 text-white" : ticket.priority == "MEDIUM" ? "bg-yellow-500 text-white" : "bg-background"}`} >
+                                                        {ticket.priority}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>{ticket.unit || '-'}</TableCell>
+                                                <TableCell>{ticket.reporter?.Name || '-'}</TableCell>
+                                                <TableCell>{ticket.reporter_name || '-'}</TableCell>
+                                                <TableCell>{ticket.assignee?.Name || 'Unassigned'}</TableCell>
+                                                <TableCell>
+                                                    {ticket.proof_image ? (
+                                                        <a
+                                                            href={getImageUrl(ticket.proof_image)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs text-blue-600 underline font-medium hover:text-blue-800"
+                                                        >
+                                                            See work proof Picture
+                                                        </a>
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground">-</span>
+                                                    )}
+                                                </TableCell>
+                                                {(userRole === 'Admin' || userRole === 'Teknisi') && (
+                                                    <TableCell className="space-x-2">
+                                                        <ActionButton ticket={ticket} />
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            {/* ===== TAMPILAN CARD — hanya muncul di bawah md (mobile) ===== */}
+                            <div className="md:hidden space-y-3">
+                                {tickets.map((ticket, index: number) => (
+                                    <div
+                                        key={ticket.id || `ticket-card-${index}`}
+                                        className="border rounded-lg p-4 space-y-2 bg-white shadow-sm"
+                                    >
+                                        <div className="flex justify-between items-start gap-2">
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">#{index + 1}</p>
+                                                <p className="font-semibold leading-snug">{ticket.title}</p>
+                                            </div>
+                                            {renderStatusBadge(ticket.status)}
+                                        </div>
+
+                                        <div className="flex flex-wrap gap-2 text-xs">
+                                            <span className={`font-mono font-semibold px-2 py-1 rounded ${ticket.priority == "HIGH" ? "bg-red-500 text-white" : ticket.priority == "MEDIUM" ? "bg-yellow-500 text-white" : "bg-slate-100"}`}>
+                                                {ticket.priority}
+                                            </span>
+                                            <span className="px-2 py-1 rounded bg-slate-100">{ticket.unit || '-'}</span>
+                                        </div>
+
+                                        <div className="text-sm grid grid-cols-2 gap-x-2 gap-y-1 pt-1">
+                                            <span className="text-muted-foreground">Reporter Account</span>
+                                            <span className="text-right">{ticket.reporter?.Name || '-'}</span>
+
+                                            <span className="text-muted-foreground">Reporter Name</span>
+                                            <span className="text-right">{ticket.reporter_name || '-'}</span>
+
+                                            <span className="text-muted-foreground">Technician</span>
+                                            <span className="text-right">{ticket.assignee?.Name || 'Unassigned'}</span>
+                                        </div>
+
+                                        {ticket.proof_image ? (
+                                            <a
+                                                href={getImageUrl(ticket.proof_image)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-blue-600 underline font-medium block"
+                                            >
+                                                See work proof Picture
+                                            </a>
+                                        ) : (
+                                            <p className="text-xs text-muted-foreground">No proof image</p>
+                                        )}
+
+                                        {(userRole === 'Admin' || userRole === 'Teknisi') && (
+                                            <div className="pt-2">
+                                                <ActionButton ticket={ticket} />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </>
                     )}
                 </CardContent>
             </Card>
