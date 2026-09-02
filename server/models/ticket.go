@@ -1,5 +1,7 @@
 package models
 
+import "github.com/google/uuid"
+
 type Ticket struct {
 	BaseModel
 	Title        string `json:"title"`
@@ -9,11 +11,11 @@ type Ticket struct {
 	Unit         string `json:"unit"`
 	ReporterName string `json:"reporter_name"`
 
-	ReporterID uint `json:"reporter_id"`
-	Reporter   User `json:"reporter" gorm:"foreignKey:ReporterID"`
+	ReporterID uuid.UUID `json:"reporter_id"`
+	Reporter   User      `json:"reporter" gorm:"foreignKey:ReporterID"`
 
-	AssigneeID *uint `json:"assignee_id" gorm:"default:null"`
-	Assignee   *User `json:"assignee" gorm:"foreignKey:AssigneeID"`
+	AssigneeID *uuid.UUID `json:"assignee_id" gorm:"default:null"`
+	Assignee   *User      `json:"assignee" gorm:"foreignKey:AssigneeID"`
 
 	ProofImage *string `json:"proof_image"`
 }
