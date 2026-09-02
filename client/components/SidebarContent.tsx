@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Button } from "./ui/button"
 
 interface SidebarContentProps {
@@ -13,12 +14,24 @@ const SidebarContent = ({ handleLogout, role }: SidebarContentProps) => {
                     IT TICKETING SYSTEM
                 </h2>
                 <nav className="space-y-2">
-                    <a
+                    <Link
                         href="/dashboard"
                         className="block py-2.5 px-4 rounded bg-slate-800 text-white font-medium hover:bg-slate-700 transition"
                     >
-                        Dashboard Tiket
-                    </a>
+                        Dashboard
+                    </Link>
+                    <Link
+                        href="/tickets/active-tickets"
+                        className="block py-2.5 px-4 rounded bg-slate-800 text-white font-medium hover:bg-slate-700 transition"
+                    >
+                        Active Tickets
+                    </Link>
+                    <Link
+                        href="/tickets/closed-tickets"
+                        className="block py-2.5 px-4 rounded bg-slate-800 text-white font-medium hover:bg-slate-700 transition"
+                    >
+                        Closed Tickets
+                    </Link>
                 </nav>
             </div>
 
