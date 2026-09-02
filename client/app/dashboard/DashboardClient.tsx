@@ -257,6 +257,23 @@ export default function DashboardClient() {
         }
     };
 
+    const handleCloseTicket = async (ticketId: string) => {
+        // Tampilkan konfirmasi agar tidak langsung ke hit
+        if (!confirm("Are you sure want to close this ticket?")) return;
+
+        try {
+            // Hit put lagi untuk ubah status ticket menjadi close
+            await api.put(`/tickets/${ticketId}`, {
+                status: 'CLOSED'
+            });
+
+            // Refresh kembali data table setelah berhasil diclose
+            loadTickets()
+        } catch (error) {
+            alert("Failed to close ticket" + error)
+        }
+    }
+
     const getImageUrl = (path: string) => {
         if (path.startsWith('http')) return path;
         const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -284,6 +301,24 @@ export default function DashboardClient() {
             </Button>
         )
     );
+
+    const CloseTicketButton = ({ ticket }: { ticket: Ticket }) => {
+        const isClosed = ticket.status === "CLOSED"
+        return (
+        <Button
+            variant="default"
+            size="sm"
+            className={`w-full sm:w-auto ${
+                isClosed
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300'
+                    : 'bg-red-600 hover:bg-red-700'
+            }`}
+            onClick={() => handleCloseTicket(ticket.id)}
+        >
+            {isClosed ? "Closed" : "Close Ticket"}
+        </Button>
+    );
+    }
 
     return (
         <div className="space-y-6 px-3 sm:px-0">
@@ -479,7 +514,7 @@ export default function DashboardClient() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-16 text-center">No.</TableHead>
+                                            <TableHead className="w-16 text-center">No. Ticket</TableHead>
                                             <TableHead className="text-center">Title</TableHead>
                                             <TableHead className="text-center">Status</TableHead>
                                             <TableHead className="text-center">Priority</TableHead>
@@ -496,7 +531,7 @@ export default function DashboardClient() {
                                     <TableBody>
                                         {tickets.map((ticket, index: number) => (
                                             <TableRow key={ticket.id || `ticket-${index}`} className="text-center">
-                                                <TableCell className="font-semibold">#{index + 1}</TableCell>
+                                                <TableCell className="font-semibold">#{ticket.id.slice(0, 8)}.....</TableCell>
                                                 <TableCell className="font-medium">{ticket.title}</TableCell>
                                                 <TableCell>{renderStatusBadge(ticket.status)}</TableCell>
                                                 <TableCell>
@@ -524,7 +559,11 @@ export default function DashboardClient() {
                                                 </TableCell>
                                                 {(userRole === 'Admin' || userRole === 'Teknisi') && (
                                                     <TableCell className="space-x-2">
-                                                        <ActionButton ticket={ticket} />
+                                                        {ticket.status === "RESOLVED" || ticket.status === 'CLOSED' ? (
+                                                            <CloseTicketButton ticket={ticket} />
+                                                        ) : (
+                                                            <ActionButton ticket={ticket} />
+                                                        )}
                                                     </TableCell>
                                                 )}
                                             </TableRow>
