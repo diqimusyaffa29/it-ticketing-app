@@ -5,6 +5,8 @@ import (
 	"strings"
 	"ticketing-it-app/server/handler"
 
+	"github.com/google/uuid"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -56,15 +58,22 @@ func Protected() fiber.Handler {
 			})
 		}
 
-		userIDFloat, ok := claims["user_id"].(float64)
+		userIDStr, ok := claims["user_id"].(string)
 		if !ok {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid user_id in token payload",
 			})
 		}
 
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid user_id format",
+			})
+		}
+
 		// simpan user_id dan role ke dalam locals (Context Fiber)
-		c.Locals("user_id", uint(userIDFloat))
+		c.Locals("user_id", userID)
 		c.Locals("role", claims["role"].(string))
 
 		return c.Next()
