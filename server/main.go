@@ -42,6 +42,7 @@ func main() {
 	tickets.Post("/", handler.CreateTicket)
 	tickets.Get("/", handler.GetTickets)
 	tickets.Get("/active", handler.GetOnlyActiveTickets)
+	tickets.Get("/closed", handler.GetOnlyClosedTickets)
 	tickets.Get("/:id", handler.GetTicketById)
 
 	// HANYA Admin & Teknisi yang BISA mengubah tiket (Update Status/Assignee)
