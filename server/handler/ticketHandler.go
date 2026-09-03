@@ -131,6 +131,31 @@ func GetOnlyActiveTickets(c *fiber.Ctx) error {
 	})
 }
 
+func GetOnlyClosedTickets(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uuid.UUID)
+	role := c.Locals("role").(string)
+	var closedTickets []models.Ticket
+
+	// mengambil semua data tickets yang sudah CLOSED
+	result := config.DB.Where("status = ?", "CLOSED").Order("created_at DESC").Preload("Reporter").Preload("Assignee")
+
+	if role == "Pelapor" {
+		result = result.Where("reporter_id", userID)
+	}
+
+	if err := result.Find(&closedTickets).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get All Closed Tickets",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Successfully get all Closed Tickets",
+		"total":   len(closedTickets),
+		"data":    closedTickets,
+	})
+}
+
 func GetTicketById(c *fiber.Ctx) error {
 	// untuk mengambil ID dari param ketika hit API
 	id := c.Params("id")
