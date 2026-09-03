@@ -107,6 +107,30 @@ func GetTickets(c *fiber.Ctx) error {
 	})
 }
 
+func GetOnlyActiveTickets(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uuid.UUID)
+	role := c.Locals("role").(string)
+	var activeTickets []models.Ticket
+	// mengambil semua data tickets yang masih aktif (!CLOSED)
+	result := config.DB.Where("status <> ?", "CLOSED").Order("created_at DESC").Preload("Reporter").Preload("Assignee")
+
+	if role == "Pelapor" {
+		result = result.Where("reporter_id = ?", userID)
+	}
+
+	if err := result.Find(&activeTickets).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get Active Ticktes",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Succesfully get all active ticktes data",
+		"total":   len(activeTickets),
+		"data":    activeTickets,
+	})
+}
+
 func GetTicketById(c *fiber.Ctx) error {
 	// untuk mengambil ID dari param ketika hit API
 	id := c.Params("id")
