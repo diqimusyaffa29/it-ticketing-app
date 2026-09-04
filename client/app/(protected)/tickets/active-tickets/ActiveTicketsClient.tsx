@@ -70,6 +70,7 @@ export default function ActiveTicketsClient() {
     const [updateStatus, setUpdateStatus] = useState('')
     const [proofFile, setProofFile] = useState<File | null>(null)
     const [proofPreview, setProofPreview] = useState<string | null>(null);
+    const [removeExistingProof, setRemoveExistingProof] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
 
     // state kamera
@@ -209,6 +210,7 @@ export default function ActiveTicketsClient() {
         setUpdateStatus(ticket.status);
         setProofFile(null);
         setProofPreview(null);
+        setRemoveExistingProof(false)
         setIsUpdateOpen(true);
     };
 
@@ -311,8 +313,8 @@ export default function ActiveTicketsClient() {
                 variant="default"
                 size="sm"
                 className={`w-full sm:w-auto ${isClosed
-                        ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300'
-                        : 'bg-red-600 hover:bg-red-700 cursor-pointer'
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300'
+                    : 'bg-red-600 hover:bg-red-700 cursor-pointer'
                     }`}
                 onClick={() => handleCloseTicket(ticket.id)}
             >
@@ -433,13 +435,12 @@ export default function ActiveTicketsClient() {
                             <div className="space-y-2 border p-3 rounded-md bg-slate-50">
                                 <label className="text-sm font-medium block">Work Proof Picture</label>
 
-                                {/* 1. JIKA KAMERA AKTIF */}
                                 {isCameraActive ? (
                                     <div className="space-y-2">
                                         <div className="relative overflow-hidden rounded-md bg-black h-56 sm:h-48 flex items-center justify-center">
                                             <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
                                         </div>
-                                        <div className="flex flex-col sm:flex-row gap-2">
+                                        <div className="flex flex-col gap-2">
                                             <Button type="button" onClick={capturePhoto} className="w-full bg-emerald-600 hover:bg-emerald-700">
                                                 📷 Take Photo
                                             </Button>
@@ -449,19 +450,58 @@ export default function ActiveTicketsClient() {
                                         </div>
                                     </div>
                                 ) : proofPreview ? (
-                                    /* 2. JIKA SUDAH ADA FOTO YANG DIPILIH / DITANGKAP */
+                                    // Kasus: sudah pilih/ambil foto BARU
                                     <div className="space-y-2">
                                         <div className="relative h-48 sm:h-40 w-full overflow-hidden rounded-md border">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={proofPreview} alt="Preview Bukti" className="w-full h-full object-cover" />
+                                            <img src={proofPreview} alt="Preview Bukti Baru" className="w-full h-full object-cover" />
                                         </div>
                                         <Button type="button" variant="destructive" size="sm" className="w-full" onClick={clearSelectedProof}>
                                             Delete / Replace Photo
                                         </Button>
                                     </div>
+                                ) : selectedTicket?.proof_image && !removeExistingProof ? (
+                                    // Kasus: ada foto LAMA di server, belum ditandai untuk dihapus
+                                    <div className="space-y-2">
+                                        <div className="relative h-48 sm:h-40 w-full overflow-hidden rounded-md border">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={getImageUrl(selectedTicket.proof_image)}
+                                                alt="Foto Bukti Tersimpan"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">*Foto bukti lama sudah tersimpan di server.</p>
+                                        <div className="flex flex-col gap-2">
+                                            <Button type="button" variant="outline" className="w-full" onClick={startCamera}>
+                                                📷 Replace with Camera
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="sm"
+                                                className="w-full sm:w-auto"
+                                                onClick={() => setRemoveExistingProof(true)}
+                                            >
+                                                Delete
+                                            </Button>
+                                        </div>
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => {
+                                                if (e.target.files && e.target.files[0]) {
+                                                    handleFileChange(e.target.files[0]);
+                                                }
+                                            }}
+                                        />
+                                    </div>
                                 ) : (
-                                    /* 3. OPSI PILIHAN UPLOAD / AMBIL FOTO */
+                                    // Kasus: tidak ada foto sama sekali (baru / sudah dihapus)
                                     <div className="space-y-3">
+                                        {removeExistingProof && (
+                                            <p className="text-xs text-red-600">*Foto lama akan dihapus setelah disimpan.</p>
+                                        )}
                                         <div className="flex gap-2">
                                             <Button type="button" variant="outline" className="w-full" onClick={startCamera}>
                                                 📷 Open Camera
@@ -480,12 +520,6 @@ export default function ActiveTicketsClient() {
                                             }}
                                         />
                                     </div>
-                                )}
-
-                                {selectedTicket?.proof_image && !proofFile && !isCameraActive && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        *Foto bukti lama sudah tersimpan di server.
-                                    </p>
                                 )}
                             </div>
 
@@ -561,7 +595,10 @@ export default function ActiveTicketsClient() {
                                                 {(userRole === 'Admin' || userRole === 'Teknisi') && (
                                                     <TableCell className="space-x-2">
                                                         {ticket.status === "RESOLVED" || ticket.status === 'CLOSED' ? (
-                                                            <CloseTicketButton ticket={ticket} />
+                                                            <>
+                                                                <ActionButton ticket={ticket} />
+                                                                <CloseTicketButton ticket={ticket} />
+                                                            </>
                                                         ) : (
                                                             <ActionButton ticket={ticket} />
                                                         )}
@@ -622,7 +659,10 @@ export default function ActiveTicketsClient() {
                                         {(userRole === 'Admin' || userRole === 'Teknisi') && (
                                             <div className="pt-2">
                                                 {ticket.status === "RESOLVED" || ticket.status === 'CLOSED' ? (
-                                                    <CloseTicketButton ticket={ticket} />
+                                                    <>
+                                                        <ActionButton ticket={ticket} />
+                                                        <CloseTicketButton ticket={ticket} />
+                                                    </>
                                                 ) : (
                                                     <ActionButton ticket={ticket} />
                                                 )}
