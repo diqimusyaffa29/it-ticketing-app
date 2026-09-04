@@ -66,6 +66,8 @@ export default function ActiveTicketsClient() {
 
     const [userRole, setUserRole] = useState<string | null>(null)
     const [isUpdateOpen, setIsUpdateOpen] = useState(false)
+    const [isTakeTicketOpen, setIsTakeTicketOpen] = useState(false)
+    const [isTakingTicket, setIsTakingTicket] = useState(false)
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
     const [updateStatus, setUpdateStatus] = useState('')
     const [proofFile, setProofFile] = useState<File | null>(null)
@@ -214,6 +216,11 @@ export default function ActiveTicketsClient() {
         setIsUpdateOpen(true);
     };
 
+    const openTakeTicketModal = (ticket: Ticket) => {
+        setSelectedTicket(ticket);
+        setIsTakeTicketOpen(true);
+    };
+
     // Function untuk mengirim PUT ke BE
     const handleUpdateTicket = async (e: React.SubmitEvent) => {
         e.preventDefault()
@@ -244,20 +251,20 @@ export default function ActiveTicketsClient() {
         }
     }
 
-    const handleClaimTicket = async (ticketId: string) => {
-        // Tampilkan konfirmasi agar tidak kepencet
-        if (!confirm("Are you sure want to take this ticket??")) return;
+    const handleConfirmTakeTicket = async () => {
+        if (!selectedTicket) return;
 
+        setIsTakingTicket(true);
         try {
-            // Kita cukup kirim status IN_PROGRESS, backend yang akan otomatis mengisi Assignee-nya
-            await api.put(`/tickets/${ticketId}`, {
+            await api.put(`/tickets/${selectedTicket.id}`, {
                 status: 'IN_PROGRESS'
             });
-
-            // Refresh data tabel setelah berhasil
+            setIsTakeTicketOpen(false);
             loadTickets();
         } catch {
             alert('Failed taking the ticket');
+        } finally {
+            setIsTakingTicket(false);
         }
     };
 
@@ -290,7 +297,7 @@ export default function ActiveTicketsClient() {
                 variant="default"
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-                onClick={() => handleClaimTicket(ticket.id)}
+                onClick={() => openTakeTicketModal(ticket)}
             >
                 Take Ticket
             </Button>
@@ -406,7 +413,7 @@ export default function ActiveTicketsClient() {
                     setIsUpdateOpen(open);
                     if (!open) stopCamera();
                 }}>
-                    <DialogContent className="w-[95vw] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle className="text-base sm:text-lg wrap-break-word">
                                 Update Ticket #{selectedTicket?.id}
@@ -416,6 +423,10 @@ export default function ActiveTicketsClient() {
                             <div>
                                 <label className="text-sm font-medium mb-1 block">Ticket Title</label>
                                 <Input value={selectedTicket?.title || ''} disabled className="bg-slate-100" />
+                            </div>
+                            <div>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">Description</label>
+                                <p className="text-sm whitespace-pre-wrap">{selectedTicket?.description || ''}</p>
                             </div>
                             <div>
                                 <label className="text-sm font-medium mb-1 block">Ticket Status</label>
@@ -527,6 +538,65 @@ export default function ActiveTicketsClient() {
                                 {isUpdating ? 'Updating...' : 'Update Ticket'}
                             </Button>
                         </form>
+                    </DialogContent>
+                </Dialog>
+                {/* Modal Take Ticket — detail tiket sebelum konfirmasi ambil */}
+                <Dialog open={isTakeTicketOpen} onOpenChange={setIsTakeTicketOpen}>
+                    <DialogContent className="w-[95vw] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>Take Ticket</DialogTitle>
+                        </DialogHeader>
+
+                        {selectedTicket && (
+                            <div className="space-y-4 mt-2">
+                                <div>
+                                    <label className="text-xs font-medium text-muted-foreground block mb-1">Title</label>
+                                    <p className="text-sm font-semibold">{selectedTicket.title}</p>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-muted-foreground block mb-1">Description</label>
+                                    <p className="text-sm whitespace-pre-wrap">{selectedTicket.description}</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs font-medium text-muted-foreground block mb-1">Priority</label>
+                                        <span className={`inline-block font-mono text-xs font-semibold px-2 py-1 rounded ${selectedTicket.priority === "HIGH" ? "bg-red-500 text-white" : selectedTicket.priority === "MEDIUM" ? "bg-yellow-500 text-white" : "bg-slate-100"}`}>
+                                            {selectedTicket.priority}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-muted-foreground block mb-1">Unit</label>
+                                        <p className="text-sm">{selectedTicket.unit}</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-muted-foreground block mb-1">Reporter Name</label>
+                                    <p className="text-sm">{selectedTicket.reporter_name || '-'}</p>
+                                </div>
+
+                                <div className="flex flex-col gap-2 pt-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={() => setIsTakeTicketOpen(false)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        className="w-full bg-blue-600 hover:bg-blue-700"
+                                        disabled={isTakingTicket}
+                                        onClick={handleConfirmTakeTicket}
+                                    >
+                                        {isTakingTicket ? 'Taking...' : 'Confirm Take Ticket'}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                     </DialogContent>
                 </Dialog>
             </div>
