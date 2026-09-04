@@ -4,8 +4,10 @@ export function proxy(request: NextRequest) {
     const token = request.cookies.get('token')?.value;
     const { pathname } = request.nextUrl;
 
+    const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/tickets');
+
     // Jika belum login tapi ingin mengakses halaman dashboard, maka akan dialihkan ke halaman login
-    if (!token && pathname.startsWith('/dashboard')) {
+    if (!token && isProtectedRoute) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
@@ -19,5 +21,5 @@ export function proxy(request: NextRequest) {
 
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/login', '/register'],
+    matcher: ['/dashboard/:path*', '/tickets/:path*', '/login', '/register'],
 }
