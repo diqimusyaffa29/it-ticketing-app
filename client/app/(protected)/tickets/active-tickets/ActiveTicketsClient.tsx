@@ -335,17 +335,17 @@ export default function ActiveTicketsClient() {
             {/* HEADER: stack vertikal di mobile, sejajar di sm ke atas */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">TICKETING SYSTEM</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">CURRENTLY ACTIVE TICKETS PAGE</h1>
                     <p className="text-muted-foreground text-sm">
-                        List of complaint tickets and assignment management
+                        List of complaint tickets and assignment management from your input
                     </p>
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="w-full sm:w-auto cursor-pointer">+ Create Ticket</Button>
+                        <Button className="w-full sm:w-auto cursor-pointer bg-green-500 hover:bg-green-600 ">+ Create Ticket</Button>
                     </DialogTrigger>
-                    <DialogContent className="w-[95vw] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
+                    <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Ticket</DialogTitle>
                         </DialogHeader>
