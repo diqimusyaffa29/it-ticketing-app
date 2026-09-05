@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getUserRole } from "@/lib/auth";
 import api from "@/lib/axios";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -342,9 +343,16 @@ export default function ActiveTicketsClient() {
                 </div>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="w-full sm:w-auto cursor-pointer bg-green-500 hover:bg-green-600 ">+ Create Ticket</Button>
-                    </DialogTrigger>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <DialogTrigger asChild>
+                                <Button className="w-full sm:w-auto cursor-pointer bg-green-500 hover:bg-green-600 ">+ Create Ticket</Button>
+                            </DialogTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="bg-slate-900 text-white">
+                            <p>Create new Ticket</p>
+                        </TooltipContent>
+                    </Tooltip>
                     <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Ticket</DialogTitle>
