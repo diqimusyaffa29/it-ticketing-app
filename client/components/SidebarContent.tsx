@@ -14,12 +14,14 @@ const SidebarContent = ({ handleLogout, role }: SidebarContentProps) => {
                     IT TICKETING SYSTEM
                 </h2>
                 <nav className="space-y-2">
-                    <Link
-                        href="/dashboard"
-                        className="block py-2.5 px-4 rounded bg-slate-800 text-white font-medium hover:bg-slate-700 transition"
-                    >
-                        Dashboard
-                    </Link>
+                    {role === "Admin" && (
+                        <Link
+                            href="/dashboard"
+                            className="block py-2.5 px-4 rounded bg-slate-800 text-white font-medium hover:bg-slate-700 transition"
+                        >
+                            Dashboard
+                        </Link>
+                    )}
                     <Link
                         href="/tickets/active-tickets"
                         className="block py-2.5 px-4 rounded bg-slate-800 text-white font-medium hover:bg-slate-700 transition"
