@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 import DashboardClient from './DashboardClient';
 import { cookies } from 'next/headers';
-import getRoleFromToken from '@/app/helper/getRoleFromToken';
 import { redirect } from 'next/navigation';
+import getRoleFromToken from '@/helper/getRoleFromToken';
 
 
 
