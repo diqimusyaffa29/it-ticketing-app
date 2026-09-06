@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
     }
 
     // sebaliknya, jika sudah login tapi ingin mengakses halaman login atau register maka akan dialihkan ke halaman dashboard
-    if (token && (pathname === '/login' || pathname === '/regiter')) {
+    if (token && (pathname === '/login' || pathname === '/register')) {
         return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
