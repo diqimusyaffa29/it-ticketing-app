@@ -8,22 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { getImageUrl } from "@/helper/getImageUrl";
+import { renderStatusBadge } from "@/helper/renderStatusBadge";
 import { getUserRole } from "@/lib/auth";
 import api from "@/lib/axios";
+import { Ticket } from "@/types/commonType";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-interface Ticket {
-    id: string;
-    title: string;
-    description: string;
-    status: string;
-    priority: string;
-    unit: string;
-    reporter_name: string;
-    proof_image?: string;
-    reporter?: { Name: string }
-    assignee?: { Name: string }
-}
+
 const unitOptions = [
     { value: "Instalasi Rawat Jalan", label: "Instalasi Rawat Jalan" },
     { value: "LABORATORIUM", label: "LABORATORIUM" },
@@ -84,7 +76,7 @@ export default function ActiveTicketsClient() {
 
     const loadTickets = useCallback(async () => {
         try {
-            const res = await api.get('/tickets');
+            const res = await api.get('/tickets/active');
             const allTickets = res.data.data || res.data
             const activeTickets = allTickets.filter((t: Ticket) => t.status !== "CLOSED")
             setTickets(activeTickets);
@@ -176,20 +168,7 @@ export default function ActiveTicketsClient() {
         setProofPreview(null);
     };
 
-    const renderStatusBadge = (status: string) => {
-        switch (status) {
-            case 'OPEN':
-                return <Badge className="bg-amber-500 hover:bg-amber-600">OPEN</Badge>;
-            case 'IN_PROGRESS':
-                return <Badge className="bg-blue-500 hover:bg-blue-600">IN PROGRESS</Badge>;
-            case 'RESOLVED':
-                return <Badge className="bg-emerald-500 hover:bg-emerald-600">RESOLVED</Badge>;
-            case 'CLOSED':
-                return <Badge variant="secondary">CLOSED</Badge>;
-            default:
-                return <Badge>{status}</Badge>;
-        }
-    };
+    
 
     const handleCreateTicket = async (e: React.SubmitEvent) => {
         e.preventDefault()
@@ -286,11 +265,7 @@ export default function ActiveTicketsClient() {
         }
     }
 
-    const getImageUrl = (path: string) => {
-        if (path.startsWith('http')) return path;
-        const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-        return `${baseURL.replace(/\/$/, '')}${path}`;
-    };
+    
 
     const ActionButton = ({ ticket }: { ticket: Ticket }) => (
         ticket.status === 'OPEN' ? (
