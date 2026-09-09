@@ -39,9 +39,9 @@ export default function LoginPage() {
 
             // Jika sudah lalu kita redirect langsung dari user login ke halaman dasboard
             router.replace('/dashboard')
-        } catch (err: any) {
-            if (err.response && err.response.data && err.response.data.error) {
-                setError(err.response.data.error);
+        } catch (error: any) {
+            if (error.response) {
+                setError(error.response.data.error);
             } else {
                 setError('Failed connecting to Server. Make sure your server is running.');
             }
