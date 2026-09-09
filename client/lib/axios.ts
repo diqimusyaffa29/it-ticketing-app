@@ -1,7 +1,6 @@
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { removeAuthToken } from "./auth";
-import { redirect } from "next/navigation";
 
 const api = axios.create({
     baseURL: 'http://localhost:8080/api',
@@ -23,10 +22,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            removeAuthToken()
+        // Cek apakah request berasal dari endpoint login
+        const isLoginEndpoint = error.config?.url?.includes('/auth/login');
+
+        // HANYA jalankan redirect token expired jika 401 dan BUKAN dari form login
+        if (error.response?.status === 401 && !isLoginEndpoint) {
+            removeAuthToken();
             if (typeof window !== 'undefined') {
-                redirect('/login')
+                // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+                window.location.href = '/login'; // Gunakan window.location.href, jangan redirect() dari Next.js
             }
         }
         return Promise.reject(error)
