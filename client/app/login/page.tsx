@@ -10,7 +10,7 @@ import { useState } from "react";
 
 export default function LoginPage() {
     const router = useRouter()
-    const [email, setEmail] = useState('')
+    const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
@@ -27,7 +27,7 @@ export default function LoginPage() {
         try {
             // kirim payload login ke BE Golang
             const response = await api.post('/auth/login', {
-                email,
+                username,
                 password
             })
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
                         IT Ticketing System
                     </CardTitle>
                     <CardDescription className="text-center">
-                        Enter your email and password to login
+                        Enter your username and password to login
                     </CardDescription>
                 </CardHeader>
 
@@ -76,13 +76,13 @@ export default function LoginPage() {
                             </div>
                         )}
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="username">Username</Label>
                             <Input
-                                id="email"
-                                type="email"
-                                placeholder="email@email.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                id="username"
+                                type="text"
+                                placeholder="insert your username here"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 required
                             />
                         </div>
@@ -91,7 +91,7 @@ export default function LoginPage() {
                             <Input
                                 id="password"
                                 type="password"
-                                placeholder="........."
+                                placeholder="insert your password here"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
