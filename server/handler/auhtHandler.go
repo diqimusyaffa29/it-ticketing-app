@@ -23,7 +23,7 @@ type RegisterInput struct {
 
 // DTO Login
 type LoginInput struct {
-	Email    string `json:"email"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
@@ -83,9 +83,9 @@ func Login(c *fiber.Ctx) error {
 
 	// Cari dulu email user yang login
 	var user models.User
-	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+	if err := config.DB.Where("username = ?", input.Username).First(&user).Error; err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Wrong Email",
+			"error": "Wrong Username",
 		})
 	}
 
