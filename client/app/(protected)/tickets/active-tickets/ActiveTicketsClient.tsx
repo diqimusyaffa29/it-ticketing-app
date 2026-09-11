@@ -431,8 +431,8 @@ export default function ActiveTicketsClient() {
 
                                 {isCameraActive ? (
                                     <div className="space-y-2">
-                                        <div className="relative overflow-hidden rounded-md bg-black h-56 sm:h-48 flex items-center justify-center">
-                                            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                                        <div className="relative overflow-hidden rounded-md bg-black h-56 sm:h-96 flex items-center justify-center">
+                                            <video ref={videoRef} autoPlay playsInline />
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             <Button type="button" onClick={capturePhoto} className="w-full bg-emerald-600 hover:bg-emerald-700">
@@ -448,7 +448,7 @@ export default function ActiveTicketsClient() {
                                     <div className="space-y-2">
                                         <div className="relative h-48 sm:h-40 w-full overflow-hidden rounded-md border">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={proofPreview} alt="Preview Bukti Baru" className="w-full h-full object-cover" />
+                                            <img src={proofPreview} alt="Preview Bukti Baru"  />
                                         </div>
                                         <Button type="button" variant="destructive" size="sm" className="w-full" onClick={clearSelectedProof}>
                                             Delete / Replace Photo
@@ -457,7 +457,7 @@ export default function ActiveTicketsClient() {
                                 ) : selectedTicket?.proof_image && !removeExistingProof ? (
                                     // Kasus: ada foto LAMA di server, belum ditandai untuk dihapus
                                     <div className="space-y-2">
-                                        <div className="relative h-48 sm:h-40 w-full overflow-hidden rounded-md border">
+                                        <div className="relative h-56 sm:h-96 w-full overflow-hidden rounded-md border">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={getImageUrl(selectedTicket.proof_image)}
