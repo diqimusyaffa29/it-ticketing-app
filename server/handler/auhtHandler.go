@@ -16,7 +16,7 @@ var JWTSecret = []byte("super_secret_key_123321@")
 // DTO Register
 type RegisterInput struct {
 	Name     string      `json:"name"`
-	Email    string      `json:"email"`
+	Username string      `json:"username"`
 	Password string      `json:"password"`
 	Role     models.Role `json:"role"`
 }
@@ -35,8 +35,8 @@ func Register(c *fiber.Ctx) error {
 		})
 	}
 
-	if input.Name == "" || input.Email == "" || input.Password == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Name, Email and Password must be filled!"})
+	if input.Name == "" || input.Username == "" || input.Password == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Name, Username and Password must be filled!"})
 	}
 
 	// Buat hashed password dari input.password
@@ -54,7 +54,7 @@ func Register(c *fiber.Ctx) error {
 
 	user := models.User{
 		Name:     input.Name,
-		Email:    input.Email,
+		Username: input.Username,
 		Password: string(hashedPassword),
 		Role:     input.Role,
 	}
@@ -62,7 +62,7 @@ func Register(c *fiber.Ctx) error {
 	// simpan ke database
 	if err := config.DB.Create(&user).Error; err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Email is already registered or something went wrong",
+			"error": "Username is already registered or something went wrong",
 		})
 	}
 
@@ -116,10 +116,10 @@ func Login(c *fiber.Ctx) error {
 		"message": "Login Successfull",
 		"token":   t,
 		"user": fiber.Map{
-			"id":    user.ID,
-			"name":  user.Name,
-			"email": user.Email,
-			"role":  user.Role,
+			"id":       user.ID,
+			"name":     user.Name,
+			"username": user.Username,
+			"role":     user.Role,
 		},
 	})
 
