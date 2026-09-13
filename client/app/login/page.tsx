@@ -7,6 +7,7 @@ import { setAuthToken } from "@/lib/auth";
 import api from "@/lib/axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export default function LoginPage() {
     const router = useRouter()
@@ -38,6 +39,7 @@ export default function LoginPage() {
             setAuthToken(token)
 
             // Jika sudah lalu kita redirect langsung dari user login ke halaman dasboard
+            toast("Login success")
             router.replace('/dashboard')
         } catch (error: any) {
             if (error.response) {
