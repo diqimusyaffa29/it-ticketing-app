@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "sonner";
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <TooltipProvider>
           {children}
+          <Toaster richColors position="top-right"/>
         </TooltipProvider>
       </body>
     </html>
