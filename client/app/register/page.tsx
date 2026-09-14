@@ -11,7 +11,7 @@ import { useState } from "react";
 export default function RegsisterPage() {
     const router = useRouter()
     const [name, setName] = useState('')
-    const [email, setEmail] = useState('')
+    const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [role, setRole] = useState('Pelapor')
     const [error, setError] = useState('')
@@ -27,7 +27,7 @@ export default function RegsisterPage() {
             // Kirim request registrasi ke BE
             await api.post('/auth/register/', {
                 name,
-                email,
+                username,
                 password,
                 role
             })
@@ -77,13 +77,13 @@ export default function RegsisterPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="username">Username</Label>
                             <Input
-                                id="email"
-                                type="email"
-                                placeholder="email@email.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                id="username"
+                                type="text"
+                                placeholder="Insert your username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 required
                             />
                         </div>
@@ -107,7 +107,7 @@ export default function RegsisterPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Pelapor">Pelapor</SelectItem>
-                                    <SelectItem value="Teknisi">Teknisi</SelectItem>
+                                    {/* <SelectItem value="Teknisi">Teknisi</SelectItem> */}
                                 </SelectContent>
                             </Select>
                         </div>
