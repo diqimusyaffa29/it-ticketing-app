@@ -7,6 +7,7 @@ import { toastSuccess } from "@/helper/toastHelper";
 import { setAuthToken } from "@/lib/auth";
 import api from "@/lib/axios";
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -15,6 +16,8 @@ export default function LoginForm() {
     const router = useRouter()
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [Icon, setIcon] = useState(() => EyeOff)
+    const [type, setType] = useState('password')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -52,6 +55,16 @@ export default function LoginForm() {
         }
     }
 
+    const handleTogglePassword = () => {
+        if (type === 'password') {
+            setIcon(Eye)
+            setType('text')
+        } else {
+            setIcon(EyeOff)
+            setType('password')
+        }
+    }
+
     return (
         <>
             <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
@@ -85,18 +98,28 @@ export default function LoginForm() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder="insert your password here"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="password"
+                                        type={type}
+                                        placeholder="insert your password here"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        aria-label={type === 'password' ? "Show Password" : "Hide Password"}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                        onClick={handleTogglePassword}
+                                    >
+                                        <Icon className="h-4 w-4" />
+                                    </button>
+                                </div>
                             </div>
                         </CardContent>
                         <CardFooter className="flex flex-col space-y-4 mt-4">
-                            <Button type="submit" className="w-full" disabled={loading}>
+                            <Button type="submit" className="w-full transition-colors" disabled={loading}>
                                 {loading ? 'Checking Credentials' : 'Login'}
                             </Button>
 
