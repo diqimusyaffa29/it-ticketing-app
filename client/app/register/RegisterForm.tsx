@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toastSuccess } from "@/helper/toastHelper";
 import api from "@/lib/axios";
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -17,6 +18,8 @@ export default function RegisterForm() {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [role, setRole] = useState('Pelapor')
+    const [type, setType] = useState('password')
+    const [Icon, setIcon] = useState(() => EyeOff)
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -39,13 +42,23 @@ export default function RegisterForm() {
             toastSuccess('Register Success')
             router.replace('/login')
         } catch (err: unknown) {
-            if (axios.isAxiosError(err) && err.response ) {
+            if (axios.isAxiosError(err) && err.response) {
                 setError(err.response.data.error);
             } else {
                 setError('Failed to register. Make sure your server is running.');
             }
         } finally {
             setLoading(false);
+        }
+    }
+
+    const handleTogglePassword = () => {
+        if (type === 'password') {
+            setIcon(Eye)
+            setType('text')
+        } else {
+            setIcon(EyeOff)
+            setType('password')
         }
     }
 
@@ -93,14 +106,25 @@ export default function RegisterForm() {
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="........."
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="password"
+                                    type={type}
+                                    placeholder="........."
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="pr-10"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleTogglePassword}
+                                    aria-label={type === 'password' ? 'Show password' : 'Hide password'}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                    <Icon className="h-4 w-4" />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
