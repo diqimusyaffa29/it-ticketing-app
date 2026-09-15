@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toastSuccess } from "@/helper/toastHelper";
 import { setAuthToken } from "@/lib/auth";
 import api from "@/lib/axios";
+import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -42,8 +43,8 @@ export default function LoginForm() {
             // Jika sudah lalu kita redirect langsung dari user login ke halaman dasboard
             toastSuccess("Login success")
             router.replace('/dashboard')
-        } catch (error: any) {
-            if (error.response) {
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error) && error.response) {
                 setError(error.response.data.error);
             } else {
                 setError('Failed connecting to Server. Make sure your server is running.');
