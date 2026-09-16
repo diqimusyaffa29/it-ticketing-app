@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
 import DashboardClient from './DashboardClient';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import getRoleFromToken from '@/helper/getRoleFromToken';
+import { getUserData } from '@/lib/auth';
 
 
 
@@ -15,12 +14,11 @@ export const metadata: Metadata = {
 
 
 export default async function DashboardPage() {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('token')?.value;
+    const userData = getUserData()
 
-    const role = token ? getRoleFromToken(token) : null
+    const role = userData?.role ?? null
 
-    if(role !== "Admin") {
+    if (role !== "Admin") {
         redirect('/tickets/active-tickets')
     }
 
