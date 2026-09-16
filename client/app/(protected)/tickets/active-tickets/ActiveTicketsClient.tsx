@@ -9,9 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getImageUrl } from "@/helper/getImageUrl";
 import { renderStatusBadge } from "@/helper/renderStatusBadge";
-import { getUserRole } from "@/lib/auth";
+import { toastSuccess } from "@/helper/toastHelper";
+import { getUserData } from "@/lib/auth";
 import api from "@/lib/axios";
 import { Ticket } from "@/types/commonType";
+import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 
@@ -67,6 +69,9 @@ export default function ActiveTicketsClient() {
     const [removeExistingProof, setRemoveExistingProof] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
 
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+
     // state kamera
     const [isCameraActive, setIsCameraActive] = useState(false)
     const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
@@ -87,8 +92,9 @@ export default function ActiveTicketsClient() {
     }, []);
 
     useEffect(() => {
+        const userData = getUserData()
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        setUserRole(getUserRole())
+        setUserRole((userData?.role as string | undefined) ?? null)
         loadTickets();
     }, [loadTickets]);
 
@@ -195,6 +201,11 @@ export default function ActiveTicketsClient() {
         setIsUpdateOpen(true);
     };
 
+    const openDeleteModal = (ticket: Ticket) => {
+        setSelectedTicket(ticket);
+        setIsDeleteOpen(true);
+    };
+
     const openTakeTicketModal = (ticket: Ticket) => {
         setSelectedTicket(ticket);
         setIsTakeTicketOpen(true);
@@ -247,6 +258,27 @@ export default function ActiveTicketsClient() {
         }
     };
 
+    const handleDeleteTicket = async () => {
+        if (!selectedTicket) return;
+
+        setIsDeleting(true);
+        try {
+            await api.delete(`/tickets/${selectedTicket.id}`);
+            setIsDeleteOpen(false);
+            toastSuccess(`${selectedTicket.id} is successfully deleted`)
+            loadTickets();
+        } catch(err: unknown) {
+            if(axios.isAxiosError(err) && err.response){
+                setError(err.response.data.error)
+                alert('Failed deleting ticket');
+            } else {
+                setError('Failed conneting to server. Make sure your server is running!')
+            }
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const handleCloseTicket = async (ticketId: string) => {
         // Tampilkan konfirmasi agar tidak langsung ke hit
         if (!confirm("Are you sure want to close this ticket?")) return;
@@ -264,10 +296,10 @@ export default function ActiveTicketsClient() {
         }
     }
 
-    
+
 
     const ActionButton = ({ ticket }: { ticket: Ticket }) => (
-        ticket.status === 'OPEN' ? (
+        ticket.status === 'OPEN' && (userRole === 'Admin' || userRole === 'Teknisi') ? (
             <Button
                 variant="default"
                 size="sm"
@@ -277,14 +309,28 @@ export default function ActiveTicketsClient() {
                 Take Ticket
             </Button>
         ) : (
-            <Button
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto"
-                onClick={() => openUpdateModal(ticket)}
-            >
-                Update
-            </Button>
+            <>
+                {userRole === 'Admin' || userRole === 'Teknisi' && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto cursor-pointer"
+                        onClick={() => openUpdateModal(ticket)}
+                    >
+                        Update
+                    </Button>
+                )}
+                {userRole === 'Admin' || userRole === 'Pelapor' && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto bg-red-600 text-white hover:bg-red-700 transition-colors hover:text-white cursor-pointer"
+                        onClick={() => openDeleteModal(ticket)}
+                    >
+                        Delete
+                    </Button>
+                )}
+            </>
         )
     );
 
@@ -447,7 +493,7 @@ export default function ActiveTicketsClient() {
                                     <div className="space-y-2">
                                         <div className="relative h-48 sm:h-40 w-full overflow-hidden rounded-md border">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={proofPreview} alt="Preview Bukti Baru"  />
+                                            <img src={proofPreview} alt="Preview Bukti Baru" />
                                         </div>
                                         <Button type="button" variant="destructive" size="sm" className="w-full" onClick={clearSelectedProof}>
                                             Delete / Replace Photo
@@ -581,6 +627,65 @@ export default function ActiveTicketsClient() {
                         )}
                     </DialogContent>
                 </Dialog>
+                {/* Modal Delete Ticket — delete tiket sebelum konfirmasi hapus */}
+                <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+                    <DialogContent className="w-[95vw] sm:w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>Delete Ticket</DialogTitle>
+                        </DialogHeader>
+
+                        {selectedTicket && (
+                            <div className="space-y-4 mt-2">
+                                <div>
+                                    <label className="text-xs font-medium text-muted-foreground block mb-1">Title</label>
+                                    <p className="text-sm font-semibold">{selectedTicket.title}</p>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-muted-foreground block mb-1">Description</label>
+                                    <p className="text-sm whitespace-pre-wrap">{selectedTicket.description}</p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs font-medium text-muted-foreground block mb-1">Priority</label>
+                                        <span className={`inline-block font-mono text-xs font-semibold px-2 py-1 rounded ${selectedTicket.priority === "HIGH" ? "bg-red-500 text-white" : selectedTicket.priority === "MEDIUM" ? "bg-yellow-500 text-white" : "bg-slate-100"}`}>
+                                            {selectedTicket.priority}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-muted-foreground block mb-1">Unit</label>
+                                        <p className="text-sm">{selectedTicket.unit}</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-muted-foreground block mb-1">Reporter Name</label>
+                                    <p className="text-sm">{selectedTicket.reporter_name || '-'}</p>
+                                </div>
+
+                                <div className="flex flex-col gap-2 pt-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={() => setIsTakeTicketOpen(false)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        className="w-full bg-red-600 hover:bg-red-700"
+                                        disabled={isDeleting}
+                                        onClick={handleDeleteTicket}
+                                    >
+                                        {isDeleting ? 'Deleting...' : 'Confirm Delete Ticket'}
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
 
             <Card>
@@ -610,9 +715,7 @@ export default function ActiveTicketsClient() {
                                             <TableHead className="text-center">Reporter Name</TableHead>
                                             <TableHead className="text-center">Technician</TableHead>
                                             <TableHead className="text-center">Evidence of Work</TableHead>
-                                            {(userRole === 'Admin' || userRole === 'Teknisi') && (
-                                                <TableHead className="text-center">Actions</TableHead>
-                                            )}
+                                            <TableHead className="text-center">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -644,18 +747,18 @@ export default function ActiveTicketsClient() {
                                                         <span className="text-xs text-muted-foreground">-</span>
                                                     )}
                                                 </TableCell>
-                                                {(userRole === 'Admin' || userRole === 'Teknisi') && (
-                                                    <TableCell className="space-x-2">
-                                                        {ticket.status === "RESOLVED" || ticket.status === 'CLOSED' ? (
-                                                            <>
-                                                                <ActionButton ticket={ticket} />
-                                                                <CloseTicketButton ticket={ticket} />
-                                                            </>
-                                                        ) : (
+                                                <TableCell className="space-x-2">
+                                                    {ticket.status === "RESOLVED" || ticket.status === 'CLOSED' ? (
+                                                        <>
                                                             <ActionButton ticket={ticket} />
-                                                        )}
-                                                    </TableCell>
-                                                )}
+                                                            {userRole === 'Admin' || userRole === 'Teknisi' && (
+                                                                <CloseTicketButton ticket={ticket} />
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <ActionButton ticket={ticket} />
+                                                    )}
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -713,7 +816,9 @@ export default function ActiveTicketsClient() {
                                                 {ticket.status === "RESOLVED" || ticket.status === 'CLOSED' ? (
                                                     <>
                                                         <ActionButton ticket={ticket} />
-                                                        <CloseTicketButton ticket={ticket} />
+                                                        {userRole === 'Admin' || userRole === 'Teknisi' && (
+                                                            <CloseTicketButton ticket={ticket} />
+                                                        )}
                                                     </>
                                                 ) : (
                                                     <ActionButton ticket={ticket} />
