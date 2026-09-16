@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { removeAuthToken, getUserRole } from '@/lib/auth';
+import { removeAuthToken, getUserData } from '@/lib/auth';
 import { Menu, X } from 'lucide-react';
 import SidebarContent from '@/components/SidebarContent';
 
@@ -12,12 +12,13 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
-    const [role, setRole] = useState<string | null>(null);
+    const [userData, setUserData] = useState<ReturnType<typeof getUserData>>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
+        const userData = getUserData()
         Promise.resolve().then(() => {
-            setRole(getUserRole());
+            setUserData(userData ?? null);
         });
     }, []);
 
@@ -30,7 +31,7 @@ export default function DashboardLayout({
         <div className="flex min-h-screen bg-gray-100">
             {/* Sidebar Navigasi — permanen di desktop (md ke atas) */}
             <aside className="hidden md:flex w-64 bg-slate-900 text-white p-6 flex-col justify-between">
-                <SidebarContent handleLogout={handleLogout} role={role} />
+                <SidebarContent handleLogout={handleLogout} userData={userData} />
             </aside>
 
             {/* Overlay + Drawer Sidebar — cuma muncul di mobile ketika dibuka */}
@@ -50,7 +51,7 @@ export default function DashboardLayout({
                         >
                             <X size={22} />
                         </button>
-                        <SidebarContent handleLogout={handleLogout} role={role} />
+                        <SidebarContent handleLogout={handleLogout} userData={userData} />
                     </aside>
                 </div>
             )}
