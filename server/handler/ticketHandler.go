@@ -303,6 +303,12 @@ func UpdateTicket(c *fiber.Ctx) error {
 
 func DeleteTicket(c *fiber.Ctx) error {
 	id := c.Params("id")
+	userID, ok := c.Locals("user_id").(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "User context tidak valid",
+		})
+	}
 
 	ticketID, err := uuid.Parse(id)
 	if err != nil {
@@ -318,10 +324,15 @@ func DeleteTicket(c *fiber.Ctx) error {
 		})
 	}
 
+	deleteData := map[string]interface{}{
+		"deleted_by": userID,
+		"deleted_at": time.Now(), // Memicu Soft Delete GORM manual via Map
+	}
+
 	// Eksekusi Delete
-	if err := config.DB.Delete(&ticket).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Failed to delete Ticket",
+	if err := config.DB.Model(&ticket).Updates(deleteData).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete Ticket: " + err.Error(),
 		})
 	}
 
