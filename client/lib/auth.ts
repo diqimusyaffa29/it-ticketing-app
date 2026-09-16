@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode"
 
 interface JWTPayload {
     user_id: number
+    username: string
     role: string
     exp: number
 }
@@ -22,13 +23,13 @@ export const removeAuthToken = () =>{
 }
 
 // Ambil role user dari cookie
-export const getUserRole = (): string | null =>{
+export const getUserData = (): JWTPayload | null =>{
     const token = getCookie('token');
     if(!token) return null
 
     try {
         const decoded = jwtDecode<JWTPayload>(token as string);
-        return decoded.role
+        return decoded
     } catch {
         return null
     }
