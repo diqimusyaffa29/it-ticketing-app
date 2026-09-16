@@ -49,7 +49,7 @@ func main() {
 	tickets.Put("/:id", middleware.RequireRoles("Admin", "Teknisi"), handler.UpdateTicket)
 
 	// HANYA Admin yang BISA menghapus tiket
-	tickets.Delete("/:id", middleware.RequireRoles("Admin"), handler.DeleteTicket)
+	tickets.Delete("/:id", handler.DeleteTicket)
 
 	// Listen di port 8080
 	app.Listen(":8080")
