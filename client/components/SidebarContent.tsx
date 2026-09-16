@@ -1,12 +1,13 @@
 import Link from "next/link"
 import { Button } from "./ui/button"
+import { getUserData } from "@/lib/auth"
 
 interface SidebarContentProps {
     handleLogout: () => void
-    role: string | null
+    userData: ReturnType<typeof getUserData>
 }
 
-const SidebarContent = ({ handleLogout, role }: SidebarContentProps) => {
+const SidebarContent = ({ handleLogout, userData }: SidebarContentProps) => {
     return (
         <>
             <div>
@@ -14,7 +15,7 @@ const SidebarContent = ({ handleLogout, role }: SidebarContentProps) => {
                     IT TICKETING SYSTEM
                 </h2>
                 <nav className="space-y-2">
-                    {role === "Admin" && (
+                    {userData?.role === "Admin" && (
                         <Link
                             href="/dashboard"
                             className="block py-2.5 px-4 rounded bg-slate-800 text-white font-medium hover:bg-slate-700 transition"
@@ -41,7 +42,11 @@ const SidebarContent = ({ handleLogout, role }: SidebarContentProps) => {
             <div className="pt-6 border-t border-slate-800 space-y-3">
                 <div className="text-xs text-slate-400">
                     Login as:{' '}
-                    <span className="font-semibold text-white uppercase">{role || 'USER'}</span>
+                    <span className="font-semibold text-white uppercase">{userData?.role || 'USER'}</span>
+                </div>
+                <div className="text-xs text-slate-400">
+                    Username:{' '}
+                    <span className="font-semibold text-white uppercase">{userData?.username || 'USER'}</span>
                 </div>
                 <Button
                     variant="destructive"
