@@ -99,9 +99,10 @@ func Login(c *fiber.Ctx) error {
 
 	// kalau sudah match email dan passwordnya, buat jwt
 	claims := jwt.MapClaims{
-		"user_id": user.ID,
-		"role":    user.Role,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"user_id":  user.ID,
+		"username": user.Name,
+		"role":     user.Role,
+		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
