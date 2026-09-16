@@ -2,12 +2,11 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getImageUrl } from '@/helper/getImageUrl'
 import { renderStatusBadge } from '@/helper/renderStatusBadge'
-import { getUserRole } from '@/lib/auth'
+import { getUserData } from '@/lib/auth'
 import api from '@/lib/axios'
 import { Ticket } from '@/types/commonType'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -37,8 +36,9 @@ const ClosedTicketsClient = () => {
   }, []);
 
   useEffect(() => {
+    const userData = getUserData()
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUserRole(getUserRole())
+    setUserRole(userData?.role ?? null)
     closedTickets();
   }, [closedTickets]);
 
