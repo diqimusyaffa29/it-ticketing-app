@@ -59,6 +59,7 @@ export default function ActiveTicketsClient() {
     });
 
     const [userRole, setUserRole] = useState<string | null>(null)
+    const [userId, setUserId] = useState<string | null>(null)
     const [isUpdateOpen, setIsUpdateOpen] = useState(false)
     const [isTakeTicketOpen, setIsTakeTicketOpen] = useState(false)
     const [isTakingTicket, setIsTakingTicket] = useState(false)
@@ -95,6 +96,7 @@ export default function ActiveTicketsClient() {
         const userData = getUserData()
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setUserRole((userData?.role as string | undefined) ?? null)
+        setUserId((userData?.user_id as string | undefined) ?? null)
         loadTickets();
     }, [loadTickets]);
 
@@ -173,7 +175,7 @@ export default function ActiveTicketsClient() {
         setProofPreview(null);
     };
 
-    
+
 
     const handleCreateTicket = async (e: React.SubmitEvent) => {
         e.preventDefault()
@@ -267,8 +269,8 @@ export default function ActiveTicketsClient() {
             setIsDeleteOpen(false);
             toastSuccess(`${selectedTicket.id} is successfully deleted`)
             loadTickets();
-        } catch(err: unknown) {
-            if(axios.isAxiosError(err) && err.response){
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err) && err.response) {
                 setError(err.response.data.error)
                 alert('Failed deleting ticket');
             } else {
@@ -298,41 +300,44 @@ export default function ActiveTicketsClient() {
 
 
 
-    const ActionButton = ({ ticket }: { ticket: Ticket }) => (
-        ticket.status === 'OPEN' && (userRole === 'Admin' || userRole === 'Teknisi') ? (
-            <Button
-                variant="default"
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-                onClick={() => openTakeTicketModal(ticket)}
-            >
-                Take Ticket
-            </Button>
-        ) : (
-            <>
-                {userRole === 'Admin' || userRole === 'Teknisi' && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto cursor-pointer"
-                        onClick={() => openUpdateModal(ticket)}
-                    >
-                        Update
-                    </Button>
-                )}
-                {userRole === 'Admin' || userRole === 'Pelapor' && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto bg-red-600 text-white hover:bg-red-700 transition-colors hover:text-white cursor-pointer"
-                        onClick={() => openDeleteModal(ticket)}
-                    >
-                        Delete
-                    </Button>
-                )}
-            </>
-        )
-    );
+    const ActionButton = ({ ticket }: { ticket: Ticket }) => {
+        return (
+            ticket.status === 'OPEN' && (userRole === 'Admin' || userRole === 'Teknisi') ? (
+                <Button
+                    variant="default"
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                    onClick={() => openTakeTicketModal(ticket)}
+                >
+                    Take Ticket
+                </Button>
+            ) : (
+                <>
+                    {(userRole === 'Admin' || userRole === 'Teknisi') && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full sm:w-auto cursor-pointer"
+                            onClick={() => openUpdateModal(ticket)}
+                            disabled={ticket.assignee?.Id == userId ? false : true}
+                        >
+                            {ticket.assignee?.Id === userId ? "Update" : `Taken by ${ticket.assignee?.Name}`}
+                        </Button>
+                    )}
+                    {(userRole === 'Admin' || userRole === 'Pelapor') && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full sm:w-auto bg-red-600 text-white hover:bg-red-700 transition-colors hover:text-white cursor-pointer"
+                            onClick={() => openDeleteModal(ticket)}
+                        >
+                            Delete
+                        </Button>
+                    )}
+                </>
+            )
+        );
+    };
 
     const CloseTicketButton = ({ ticket }: { ticket: Ticket }) => {
         const isClosed = ticket.status === "CLOSED"
