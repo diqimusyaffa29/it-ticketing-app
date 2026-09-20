@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { removeAuthToken, getUserData } from '@/lib/auth';
 import { Menu, X } from 'lucide-react';
 import SidebarContent from '@/components/SidebarContent';
+import { toastSuccess } from '@/helper/toastHelper';
 
 export default function DashboardLayout({
     children,
@@ -23,6 +24,7 @@ export default function DashboardLayout({
     }, []);
 
     const handleLogout = () => {
+        toastSuccess("Logout Successful")
         removeAuthToken();
         router.push('/login');
     };
