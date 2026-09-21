@@ -319,9 +319,9 @@ export default function ActiveTicketsClient() {
                             size="sm"
                             className="w-full sm:w-auto cursor-pointer"
                             onClick={() => openUpdateModal(ticket)}
-                            disabled={ticket.assignee?.Id == userId ? false : true}
+                            disabled={ticket.assignee?.id == userId ? false : true}
                         >
-                            {ticket.assignee?.Id === userId ? "Update" : `Taken by ${ticket.assignee?.Name}`}
+                            {ticket.assignee?.id === userId ? "Update" : `Taken by ${ticket.assignee?.name}`}
                         </Button>
                     )}
                     {(userRole === 'Admin' || userRole === 'Pelapor') && (
@@ -724,8 +724,8 @@ export default function ActiveTicketsClient() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {tickets.map((ticket, index: number) => (
-                                            <TableRow key={ticket.id || `ticket-${index}`} className="text-center">
+                                        {tickets.map((ticket, index: number) => {
+                                            return <TableRow key={ticket.id || `ticket-${index}`} className="text-center">
                                                 <TableCell className="font-semibold">#{ticket.id.slice(0, 8)}.....</TableCell>
                                                 <TableCell className="font-medium">{ticket.title}</TableCell>
                                                 <TableCell>{renderStatusBadge(ticket.status)}</TableCell>
@@ -735,9 +735,9 @@ export default function ActiveTicketsClient() {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>{ticket.unit || '-'}</TableCell>
-                                                <TableCell>{ticket.reporter?.Name || '-'}</TableCell>
+                                                <TableCell>{ticket.reporter?.name || '-'}</TableCell>
                                                 <TableCell>{ticket.reporter_name || '-'}</TableCell>
-                                                <TableCell>{ticket.assignee?.Name || 'Unassigned'}</TableCell>
+                                                <TableCell>{ticket.assignee?.name || 'Unassigned'}</TableCell>
                                                 <TableCell>
                                                     {ticket.proof_image ? (
                                                         <a
@@ -764,8 +764,8 @@ export default function ActiveTicketsClient() {
                                                         <ActionButton ticket={ticket} />
                                                     )}
                                                 </TableCell>
-                                            </TableRow>
-                                        ))}
+                                            </TableRow>;
+                                        })}
                                     </TableBody>
                                 </Table>
                             </div>
@@ -794,13 +794,13 @@ export default function ActiveTicketsClient() {
 
                                         <div className="text-sm grid grid-cols-2 gap-x-2 gap-y-1 pt-1">
                                             <span className="text-muted-foreground">Reporter Account</span>
-                                            <span className="text-right">{ticket.reporter?.Name || '-'}</span>
+                                            <span className="text-right">{ticket.reporter?.name || '-'}</span>
 
                                             <span className="text-muted-foreground">Reporter Name</span>
                                             <span className="text-right">{ticket.reporter_name || '-'}</span>
 
                                             <span className="text-muted-foreground">Technician</span>
-                                            <span className="text-right">{ticket.assignee?.Name || 'Unassigned'}</span>
+                                            <span className="text-right">{ticket.assignee?.name || 'Unassigned'}</span>
                                         </div>
 
                                         {ticket.proof_image ? (
