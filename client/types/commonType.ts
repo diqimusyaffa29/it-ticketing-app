@@ -16,8 +16,8 @@ interface Ticket extends Base{
     unit: string;
     reporter_name: string;
     proof_image?: string;
-    reporter?: { Id: string, Name: string }
-    assignee?: { Id: string, Name: string }
+    reporter?: { id: string, name: string }
+    assignee?: { id: string, name: string }
 }
 
 
