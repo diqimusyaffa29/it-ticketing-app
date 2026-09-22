@@ -1,8 +1,8 @@
 import { deleteCookie, getCookie, setCookie } from "cookies-next"
-import { jwtDecode } from "jwt-decode"
+import { decodeToken } from "./decode-token"
 
-interface JWTPayload {
-    user_id: number
+export interface JWTPayload {
+    user_id: string
     username: string
     role: string
     exp: number
@@ -10,27 +10,21 @@ interface JWTPayload {
 
 // Simpan token ke dalam cookies dengan masa berlaku (1 Hari)
 export const setAuthToken = (token: string) => {
-    setCookie('token', token,{
+    setCookie('token', token, {
         maxAge: 60 * 60 * 24, //1 hari 
-        path:'/',
-        secure:process.env.NODE_ENV ==='production',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
     })
 }
 
-export const removeAuthToken = () =>{
+export const removeAuthToken = () => {
     deleteCookie('token')
 }
 
 // Ambil role user dari cookie
-export const getUserData = (): JWTPayload | null =>{
+export const getUserData = (): JWTPayload | null => {
     const token = getCookie('token');
-    if(!token) return null
 
-    try {
-        const decoded = jwtDecode<JWTPayload>(token as string);
-        return decoded
-    } catch {
-        return null
-    }
+    return decodeToken(token as string)
 }
