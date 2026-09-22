@@ -18,4 +18,7 @@ type Ticket struct {
 	Assignee   *User      `json:"assignee" gorm:"foreignKey:AssigneeID"`
 
 	ProofImage *string `json:"proof_image"`
+
+	IssueDescription      *string `json:"issue_description"`
+	SuggestionDescription *string `json:"suggestion_description"`
 }
