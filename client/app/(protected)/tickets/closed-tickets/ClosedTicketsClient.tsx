@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getImageUrl } from '@/helper/getImageUrl'
 import { renderStatusBadge } from '@/helper/renderStatusBadge'
-import { getUserData } from '@/lib/auth'
+// import { getUserData } from '@/lib/auth'
 import api from '@/lib/axios'
 import { Ticket } from '@/types/commonType'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -15,7 +15,7 @@ const ClosedTicketsClient = () => {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [userRole, setUserRole] = useState<string | null>(null)
+  // const [userRole, setUserRole] = useState<string | null>(null)
 
   // state untuk memilih ticketnya 
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
@@ -36,9 +36,9 @@ const ClosedTicketsClient = () => {
   }, []);
 
   useEffect(() => {
-    const userData = getUserData()
+    // const userData = getUserData()
+    // setUserRole(userData?.role ?? null)
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUserRole(userData?.role ?? null)
     closedTickets();
   }, [closedTickets]);
 
