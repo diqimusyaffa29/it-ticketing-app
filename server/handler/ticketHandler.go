@@ -14,21 +14,25 @@ import (
 )
 
 type CreateTicketInput struct {
-	Title        string     `json:"title"`
-	Description  string     `json:"description"`
-	Priority     string     `json:"priority"`
-	Unit         string     `json:"unit"`
-	ReporterName string     `json:"reporter_name"`
-	AssigneeID   *uuid.UUID `json:"assignee_id"`
+	Title                 string     `json:"title"`
+	Description           string     `json:"description"`
+	Priority              string     `json:"priority"`
+	Unit                  string     `json:"unit"`
+	ReporterName          string     `json:"reporter_name"`
+	AssigneeID            *uuid.UUID `json:"assignee_id"`
+	IssueDescription      *string    `json:"issue_description"`
+	SuggestionDescription *string    `json:"suggestion_description"`
 }
 
 type UpdateTicketInput struct {
-	Status       string     `json:"status"`
-	Priority     string     `json:"priority"`
-	Unit         string     `json:"unit"`
-	ReporterName string     `json:"reporter_name"`
-	AssigneeID   *uuid.UUID `json:"assignee_id"`
-	ProofImage   *string    `json:"proof_image"`
+	Status                string     `json:"status"`
+	Priority              string     `json:"priority"`
+	Unit                  string     `json:"unit"`
+	ReporterName          string     `json:"reporter_name"`
+	AssigneeID            *uuid.UUID `json:"assignee_id"`
+	ProofImage            *string    `json:"proof_image"`
+	IssueDescription      *string    `json:"issue_description"`
+	SuggestionDescription *string    `json:"suggestion_description"`
 }
 
 func CreateTicket(c *fiber.Ctx) error {
@@ -52,14 +56,16 @@ func CreateTicket(c *fiber.Ctx) error {
 
 	// Buat instance Ticket
 	ticket := models.Ticket{
-		Title:        input.Title,
-		Description:  input.Description,
-		Status:       "OPEN",
-		Priority:     input.Priority,
-		Unit:         input.Unit,
-		ReporterName: input.ReporterName,
-		ReporterID:   userID,
-		AssigneeID:   input.AssigneeID,
+		Title:                 input.Title,
+		Description:           input.Description,
+		Status:                "OPEN",
+		Priority:              input.Priority,
+		Unit:                  input.Unit,
+		ReporterName:          input.ReporterName,
+		ReporterID:            userID,
+		AssigneeID:            input.AssigneeID,
+		IssueDescription:      input.IssueDescription,
+		SuggestionDescription: input.SuggestionDescription,
 		BaseModel: models.BaseModel{
 			CreatedBy: userID,
 		},
@@ -184,7 +190,6 @@ func GetTicketById(c *fiber.Ctx) error {
 func UpdateTicket(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	// 1. GUNAKAN c.Locals() untuk membaca data dari Middleware JWT di Fiber
 	userID, okUser := c.Locals("user_id").(uuid.UUID)
 	userRole, okRole := c.Locals("role").(string)
 
@@ -202,31 +207,24 @@ func UpdateTicket(c *fiber.Ctx) error {
 	}
 
 	var ticket models.Ticket
-
-	// Cek apakah tiket ada di DB
 	if err := config.DB.Where("id = ?", ticketID).First(&ticket).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Can't Find Ticket",
 		})
 	}
 
-	var input UpdateTicketInput
+	// HAPUS ATAU KOMENTARI c.BodyParser karena kita pakai FormData (multipart/form-data)
+	// var input UpdateTicketInput
+	// if err := c.BodyParser(&input); err != nil { ... }
 
-	if err := c.BodyParser(&input); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "JSON Formats not valid: " + err.Error(),
-		})
-	}
-
-	// Map untuk partial update
 	updateData := make(map[string]interface{})
 
 	if (strings.EqualFold(userRole, "Teknisi") || strings.EqualFold(userRole, "Admin")) && ticket.AssigneeID == nil {
 		updateData["assignee_id"] = userID
 	}
 
-	// Validasi & masukan field input ke updateData
-	if input.Status != "" {
+	// AMBIL DATA TEKS MENGGUNAKAN c.FormValue()
+	if status := c.FormValue("status"); status != "" {
 		allowedStatuses := map[string]bool{
 			"OPEN":        true,
 			"IN_PROGRESS": true,
@@ -234,29 +232,39 @@ func UpdateTicket(c *fiber.Ctx) error {
 			"CLOSED":      true,
 		}
 
-		if !allowedStatuses[input.Status] {
+		if !allowedStatuses[status] {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": "Status tidak valid. Gunakan: OPEN, IN_PROGRESS, RESOLVED, atau CLOSED",
+				"error": "Status tidak valid",
 			})
 		}
-		updateData["status"] = input.Status
+		updateData["status"] = status
 	}
 
-	if input.Priority != "" {
-		updateData["priority"] = input.Priority
+	if priority := c.FormValue("priority"); priority != "" {
+		updateData["priority"] = priority
 	}
 
-	if input.Unit != "" {
-		updateData["unit"] = input.Unit
+	if unit := c.FormValue("unit"); unit != "" {
+		updateData["unit"] = unit
 	}
 
-	if input.ReporterName != "" {
-		updateData["reporter_name"] = input.ReporterName
+	if reporterName := c.FormValue("reporter_name"); reporterName != "" {
+		updateData["reporter_name"] = reporterName
 	}
 
-	// Jika Admin menentukan AssigneeID secara manual lewat JSON
-	if input.AssigneeID != nil {
-		updateData["assignee_id"] = input.AssigneeID
+	if assigneeIDStr := c.FormValue("assignee_id"); assigneeIDStr != "" {
+		if parsedAssigneeID, err := uuid.Parse(assigneeIDStr); err == nil {
+			updateData["assignee_id"] = parsedAssigneeID
+		}
+	}
+
+	// Tangkap issue_description dan suggestion_description dari FormValue
+	if issueDesc := c.FormValue("issue_description"); issueDesc != "" {
+		updateData["issue_description"] = issueDesc
+	}
+
+	if suggestionDesc := c.FormValue("suggestion_description"); suggestionDesc != "" {
+		updateData["suggestion_description"] = suggestionDesc
 	}
 
 	now := time.Now()
@@ -266,21 +274,16 @@ func UpdateTicket(c *fiber.Ctx) error {
 	// Logic untuk menambahkan data foto bukti
 	file, errFile := c.FormFile("proof_image")
 	if errFile == nil {
-		// Memastikan folder uploads sudah ada (jika belum ada maka akan otomatis terbuat)
 		os.MkdirAll("./uploads", os.ModePerm)
-
-		// Beri nama unik menggunakan timestamp agar tidak ada file duplikat
 		filename := fmt.Sprintf("%d_%s", time.Now().Unix(), filepath.Base(file.Filename))
 		savePath := fmt.Sprintf("./uploads/%s", filename)
 
-		// Simpan file fisik tadi ke dalam server
 		if errSave := c.SaveFile(file, savePath); errSave != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": "Failed to save image proof:" + errSave.Error(),
 			})
 		}
 
-		// Masukkan string path url tadi ke dalam data yang akan di save ke database
 		updateData["proof_image"] = "/uploads/" + filename
 		updateData["status"] = "RESOLVED"
 	}
@@ -292,7 +295,6 @@ func UpdateTicket(c *fiber.Ctx) error {
 		})
 	}
 
-	// Load ulang data ticket terbaru beserta Preload relasinya
 	config.DB.Preload("Reporter").Preload("Assignee").Where("id = ?", ticketID).First(&ticket)
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
