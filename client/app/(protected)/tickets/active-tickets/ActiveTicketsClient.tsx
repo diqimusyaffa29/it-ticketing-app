@@ -70,6 +70,9 @@ export default function ActiveTicketsClient() {
     const [removeExistingProof, setRemoveExistingProof] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
 
+    const [issueDescription, setIssueDescription] = useState<string | null>(null)
+    const [suggestionDescription, setSuggestionDescription] = useState<string | null>(null)
+
     const [isDeleteOpen, setIsDeleteOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
 
@@ -199,7 +202,9 @@ export default function ActiveTicketsClient() {
         setUpdateStatus(ticket.status);
         setProofFile(null);
         setProofPreview(null);
-        setRemoveExistingProof(false)
+        setRemoveExistingProof(false);
+        setIssueDescription(ticket.issue_description ?? '')
+        setSuggestionDescription(ticket.suggestion_description ?? '')
         setIsUpdateOpen(true);
     };
 
@@ -228,6 +233,8 @@ export default function ActiveTicketsClient() {
                 updateFormData.append('proof_image', proofFile);
             }
 
+            updateFormData.append('issue_description', issueDescription ?? '')
+            updateFormData.append('suggestion_description', suggestionDescription ?? '')
             await api.put(`/tickets/${selectedTicket.id}`, updateFormData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
@@ -496,7 +503,7 @@ export default function ActiveTicketsClient() {
                                 ) : proofPreview ? (
                                     // Kasus: sudah pilih/ambil foto BARU
                                     <div className="space-y-2">
-                                        <div className="relative h-48 sm:h-40 w-full overflow-hidden rounded-md border">
+                                        <div className="relative h-56 sm:h-96 w-full overflow-hidden rounded-md border">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img src={proofPreview} alt="Preview Bukti Baru" />
                                         </div>
@@ -565,6 +572,25 @@ export default function ActiveTicketsClient() {
                                         />
                                     </div>
                                 )}
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium mb-1 block">Issue Description</label>
+                                <Textarea
+                                    required
+                                    value={issueDescription ?? ''}
+                                    onChange={(e) => setIssueDescription(e.target.value)}
+                                    placeholder="Issues when handling..."
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-1 block">Suggestions Description</label>
+                                <Textarea
+                                    required
+                                    value={suggestionDescription ?? ''}
+                                    onChange={(e) => setSuggestionDescription(e.target.value)}
+                                    placeholder="Suggetion for the task..."
+                                />
                             </div>
 
                             <Button type="submit" className="w-full" disabled={isUpdating}>
