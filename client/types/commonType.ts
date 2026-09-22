@@ -7,7 +7,7 @@ interface Base {
     updated_by?: string;
     deleted_by?: string;
 }
-interface Ticket extends Base{
+interface Ticket extends Base {
     id: string;
     title: string;
     description: string;
@@ -18,6 +18,8 @@ interface Ticket extends Base{
     proof_image?: string;
     reporter?: { id: string, name: string }
     assignee?: { id: string, name: string }
+    issue_description?: string
+    suggestion_description?: string
 }
 
 
