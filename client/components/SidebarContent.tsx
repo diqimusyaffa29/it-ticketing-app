@@ -1,10 +1,10 @@
 import Link from "next/link"
 import { Button } from "./ui/button"
-import { getUserData } from "@/lib/auth"
+import { JWTPayload } from "@/lib/auth"
 
 interface SidebarContentProps {
     handleLogout: () => void
-    userData: ReturnType<typeof getUserData>
+    userData: JWTPayload | null
 }
 
 const SidebarContent = ({ handleLogout, userData }: SidebarContentProps) => {
