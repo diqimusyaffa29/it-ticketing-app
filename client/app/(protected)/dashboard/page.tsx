@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import DashboardClient from './DashboardClient';
 import { redirect } from 'next/navigation';
-import { getUserData } from '@/lib/auth';
+import { getUserDataServer } from '@/lib/auth-server';
 
 
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 
 export default async function DashboardPage() {
-    const userData = getUserData()
+    const userData = await getUserDataServer()
 
     const role = userData?.role ?? null
 
