@@ -782,7 +782,7 @@ export default function ActiveTicketsClient() {
                                                     {ticket.status === "RESOLVED" || ticket.status === 'CLOSED' ? (
                                                         <>
                                                             <ActionButton ticket={ticket} />
-                                                            {userRole === 'Admin' || userRole === 'Teknisi' && (
+                                                            {(userRole === 'Admin' || userRole === 'Teknisi') && (
                                                                 <CloseTicketButton ticket={ticket} />
                                                             )}
                                                         </>
