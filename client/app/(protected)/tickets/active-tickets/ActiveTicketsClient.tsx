@@ -357,6 +357,7 @@ export default function ActiveTicketsClient() {
                     : 'bg-red-600 hover:bg-red-700 cursor-pointer'
                     }`}
                 onClick={() => handleCloseTicket(ticket.id)}
+                hidden={ticket.assignee?.id !== userId}
             >
                 {isClosed ? "Closed" : "Close Ticket"}
             </Button>
